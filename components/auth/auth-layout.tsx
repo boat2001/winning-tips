@@ -1,6 +1,4 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
-import { Wordmark } from "@/components/brand/wordmark";
 import { siteConfig } from "@/lib/config/site";
 
 const points = [
@@ -13,8 +11,10 @@ const points = [
  * Auth screens are a split masthead: the brand argument on the paper tint to the
  * left, the form on white to the right. The two grounds are a shade apart rather
  * than inverted, so the split reads as one sheet folded, not two themes.
- * On phones the panel collapses above the form and the argument is dropped so
- * the fields stay above the fold.
+ *
+ * The panel carries no lockup of its own — the site header already sits directly
+ * above it — and it is desktop-only, because everything in it is supporting
+ * copy. On a phone that leaves the form starting at the top of the page.
  */
 export function AuthLayout({
   kicker,
@@ -31,12 +31,8 @@ export function AuthLayout({
 }) {
   return (
     <div className="lg:grid lg:min-h-[calc(100vh-6.25rem)] lg:grid-cols-2">
-      <aside className="flex flex-col justify-between border-b border-line-2 bg-paper-2 px-5 py-8 sm:px-8 lg:border-b-0 lg:border-r lg:px-12 lg:py-14">
-        <Link href="/" aria-label={`${siteConfig.name} home`} className="inline-flex w-fit">
-          <Wordmark size="md" priority />
-        </Link>
-
-        <div className="mt-10 hidden lg:block">
+      <aside className="hidden flex-col justify-between bg-paper-2 px-12 py-14 lg:flex lg:border-r lg:border-line-2">
+        <div>
           <p className="eyebrow eyebrow-blue">{siteConfig.tagline}</p>
           <ul className="mt-6 space-y-4">
             {points.map((point) => (
@@ -48,7 +44,7 @@ export function AuthLayout({
           </ul>
         </div>
 
-        <p className="eyebrow mt-10 hidden lg:block">18+ only · Bet responsibly</p>
+        <p className="eyebrow mt-10">18+ only · Bet responsibly</p>
       </aside>
 
       <main className="bg-surface px-5 py-10 sm:px-8 lg:px-12 lg:py-14">
