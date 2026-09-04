@@ -1,0 +1,111 @@
+import "server-only";
+
+import { unstable_cache } from "next/cache";
+import { publicVipTag } from "@/lib/cache/tags";
+import { getDatabase } from "@/lib/db/client";
+
+const getCachedActiveVipPlans = unstable_cache(async function getCachedActiveVipPlans() {
+  return getDatabase().plan.findMany({
+    where: { isActive: true },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      priceMinor: true,
+      currency: true,
+      durationDays: true,
+      isSoldOut: true,
+      deck: { select: { id: true, name: true, slug: true } },
+    },
+    orderBy: { sortOrder: "asc" },
+  });
+}, ["active-vip-plans-v1"], { revalidate: 60, tags: [publicVipTag] });
+
+export async function getActiveVipPlans() {
+  return getCachedActiveVipPlans();
+}
+
+export async function getMemberVipPurchases(userId: string) {
+  const payments = await getDatabase().payment.findMany({
+    where: { userId, status: "SUCCESS" },
+    select: {
+      id: true,
+      bookingId: true,
+      amountMinor: true,
+      currency: true,
+      paidAt: true,
+      createdAt: true,
+      plan: { select: { id: true, name: true } },
+      booking: {
+        select: {
+          title: true,
+          platform: true,
+          code: true,
+          shareUrl: true,
+          totalOdds: true,
+          predictions: {
+            where: { status: "PUBLISHED", visibility: "PREMIUM" },
+            select: {
+              id: true,
+              market: true,
+              selection: true,
+              odds: true,
+              result: true,
+              fixture: {
+                select: {
+                  kickoffAt: true,
+                  league: { select: { name: true } },
+                  homeTeam: { select: { name: true } },
+                  awayTeam: { select: { name: true } },
+                },
+              },
+            },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      },
+    },
+    orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
+    take: 50,
+  });
+
+  return payments.map((payment) => {
+    const purchasedAt = payment.paidAt ?? payment.createdAt;
+
+    return {
+      id: payment.id,
+      bookingId: payment.bookingId,
+      planId: payment.plan.id,
+      planName: payment.plan.name,
+      amountMinor: payment.amountMinor,
+      currency: payment.currency,
+      purchasedAt,
+      booking: payment.booking ? {
+        title: payment.booking.title,
+        platform: payment.booking.platform,
+        code: payment.booking.code,
+        shareUrl: payment.booking.shareUrl,
+        totalOdds: payment.booking.totalOdds ? Number(payment.booking.totalOdds) : null,
+      } : null,
+      games: (payment.booking?.predictions ?? []).map((prediction) => ({
+        id: prediction.id,
+        homeTeam: prediction.fixture.homeTeam.name,
+        awayTeam: prediction.fixture.awayTeam.name,
+        league: prediction.fixture.league.name,
+        kickoffAt: prediction.fixture.kickoffAt,
+        market: prediction.market,
+        selection: prediction.selection,
+        odds: Number(prediction.odds),
+        result: prediction.result,
+      })),
+    };
+  });
+}
+
+export async function getPurchasedBookingIds(userId: string) {
+  const payments = await getDatabase().payment.findMany({
+    where: { userId, status: "SUCCESS", bookingId: { not: null } },
+    select: { bookingId: true },
+  });
+  return payments.flatMap((payment) => payment.bookingId ? [payment.bookingId] : []);
+}

@@ -1,0 +1,1121 @@
+# CODEX MASTER BUILD PROMPT — TIPS DECK
+
+Build a production-ready football prediction platform called **Tips Deck**.
+
+Tips Deck should operate similarly to A1Tips in terms of business flow, but it must have an original design, original code, better usability, cleaner architecture, better transparency, and a stronger modern product experience.
+
+Do NOT copy A1Tips branding, content, code, layout, images, text, or proprietary assets.
+
+Use A1Tips only as a functional reference for:
+
+- free football predictions
+- yesterday / today / tomorrow predictions
+- VIP/premium predictions
+- user accounts
+- premium access
+- results history
+- prediction performance
+- social/Telegram funnel
+- daily publishing of tips
+
+Tips Deck should feel like a **modern football intelligence product**, not a cluttered gambling website.
+
+---
+
+# IMPORTANT DEVELOPMENT RULE
+
+DO NOT build the entire application in one pass.
+
+Build Tips Deck in clearly separated stages.
+
+At the end of each stage:
+
+1. run TypeScript checks
+2. run lint
+3. run tests relevant to that stage
+4. run the production build
+5. fix all errors
+6. summarize what was completed
+7. stop and wait for the next instruction before starting the next stage
+
+Do not move automatically to later stages.
+
+The goal is to keep the codebase stable and reviewable throughout development.
+
+---
+
+# 1. CORE TECHNOLOGY
+
+Use a single **Next.js application**.
+
+Use:
+
+- Next.js latest stable version
+- App Router
+- TypeScript
+- Tailwind CSS
+- PostgreSQL
+- Prisma ORM
+- Zod
+- bcrypt
+- secure session/authentication implementation
+- React Server Components where appropriate
+- Server Actions where appropriate
+- Route Handlers where API endpoints are required
+
+Use client components only where interactivity actually requires them.
+
+Do NOT create:
+
+- separate Express backend
+- separate React admin app
+- separate frontend repository
+
+Everything should live in one clean Next.js application.
+
+External services such as PostgreSQL, payment providers and football-data providers remain separate services.
+
+---
+
+# 2. HIGH-LEVEL ARCHITECTURE
+
+The application should support:
+
+```text
+tipsdeck.com
+│
+├── Public Website
+│
+├── User Account
+│
+├── VIP / Premium Area
+│
+├── Admin Dashboard
+│
+├── Server Actions
+│
+├── Route Handlers
+│
+├── Authentication
+│
+├── Football Data Sync
+│
+└── Payment Webhooks
+        │
+        ▼
+    PostgreSQL
+```
+
+Possible deployment:
+
+```text
+Namecheap
+   │
+tipsdeck.com
+   │
+   ▼
+Vercel
+   │
+Next.js Application
+   │
+   ├── Public website
+   ├── Admin
+   ├── Backend/server logic
+   └── scheduled jobs/API routes
+          │
+          ▼
+      PostgreSQL
+```
+
+Use environment variables for all secrets.
+
+---
+
+# 3. PROJECT STRUCTURE
+
+Use a clean structure similar to:
+
+```text
+tipsdeck/
+│
+├── app/
+│   ├── (public)/
+│   │   ├── page.tsx
+│   │   ├── predictions/
+│   │   ├── results/
+│   │   ├── performance/
+│   │   ├── vip/
+│   │   ├── pricing/
+│   │   ├── about/
+│   │   └── contact/
+│   │
+│   ├── (auth)/
+│   │   ├── login/
+│   │   ├── register/
+│   │   └── forgot-password/
+│   │
+│   ├── account/
+│   │
+│   ├── admin/
+│   │   ├── page.tsx
+│   │   ├── fixtures/
+│   │   ├── predictions/
+│   │   ├── decks/
+│   │   ├── users/
+│   │   ├── subscriptions/
+│   │   ├── payments/
+│   │   ├── results/
+│   │   └── settings/
+│   │
+│   └── api/
+│       ├── football/
+│       ├── cron/
+│       └── webhooks/
+│
+├── components/
+│   ├── ui/
+│   ├── predictions/
+│   ├── fixtures/
+│   ├── admin/
+│   └── layout/
+│
+├── lib/
+│   ├── db/
+│   ├── auth/
+│   ├── football/
+│   ├── payments/
+│   ├── validation/
+│   └── utils/
+│
+├── prisma/
+│   ├── schema.prisma
+│   └── seed.ts
+│
+├── public/
+│
+├── tests/
+│
+├── .env.example
+└── README.md
+```
+
+Do not create unnecessary abstractions.
+
+Keep the project understandable for another developer.
+
+---
+
+# 4. BRAND
+
+Name:
+
+**Tips Deck**
+
+Core idea:
+
+Football predictions are organised into curated **Decks**.
+
+Suggested tagline:
+
+**Smarter football picks, every day.**
+
+Alternative:
+
+**Your daily deck of smarter football predictions.**
+
+The brand must feel:
+
+- trustworthy
+- premium
+- sporty
+- simple
+- modern
+- Ghanaian/African-market friendly
+- easy to use on mobile
+
+Avoid:
+
+- flashing gambling graphics
+- excessive gradients
+- fake luxury visuals
+- clutter
+- tiny text
+- “100% sure”
+- “fixed matches”
+- guaranteed profit claims
+
+---
+
+# 5. MAIN PRODUCT FLOW
+
+The customer journey is:
+
+```text
+Visitor
+↓
+See today's free predictions
+↓
+Check previous results
+↓
+Build trust
+↓
+Explore premium Decks
+↓
+Register
+↓
+Purchase premium access
+↓
+Unlock premium predictions
+↓
+Return for daily tips/results
+```
+
+---
+
+# 6. DAILY FOOTBALL DATA MODEL
+
+Tips Deck should NOT require the administrator to manually type every football fixture.
+
+The system should support integration with a licensed football-data API.
+
+Examples:
+
+- API-Football
+- SportMonks
+- Football-Data
+- another configurable provider
+
+Create an abstraction:
+
+```ts
+export interface FootballProvider {
+  getFixturesByDate(date: string): Promise<FixtureInput[]>
+  getFixtureById(id: string): Promise<FixtureInput | null>
+  getResultsByDate(date: string): Promise<FixtureResultInput[]>
+  getLeagueStandings?(leagueId: string): Promise<StandingInput[]>
+  getHeadToHead?(homeTeamId: string, awayTeamId: string): Promise<MatchInput[]>
+}
+```
+
+Create:
+
+```text
+lib/football/
+├── provider.ts
+├── mock-provider.ts
+├── types.ts
+└── sync.ts
+```
+
+Use the mock provider until a real API key is configured.
+
+Never scrape sports websites.
+
+---
+
+# 7. FIXTURE SYNCHRONISATION
+
+The system should be able to automatically sync:
+
+- yesterday
+- today
+- tomorrow
+- several upcoming days
+
+Store fixtures locally in PostgreSQL.
+
+Do NOT fetch the external football provider every time a visitor loads a page.
+
+The website should read from PostgreSQL.
+
+Architecture:
+
+```text
+Football API
+    ↓
+Scheduled Sync
+    ↓
+PostgreSQL
+    ↓
+Tips Deck Website/Admin
+```
+
+Create a secure cron-compatible endpoint such as:
+
+```text
+/api/cron/sync-fixtures
+```
+
+Protect it using a secret.
+
+The sync should:
+
+- insert new fixtures
+- update changed fixtures
+- avoid duplicates
+- update kickoff times
+- update fixture status
+- update final scores
+- preserve existing predictions
+
+Use provider fixture IDs as external identifiers.
+
+---
+
+# 8. DATABASE
+
+Use Prisma + PostgreSQL.
+
+Core entities should eventually include:
+
+```text
+User
+Role
+League
+Team
+Fixture
+Prediction
+Deck
+Subscription
+Payment
+Notification
+Article
+AuditLog
+Setting
+```
+
+Use proper:
+
+- indexes
+- unique constraints
+- foreign keys
+- timestamps
+
+Never store money as JavaScript floating-point values.
+
+Use integer minor units or Prisma Decimal.
+
+---
+
+# 9. PREDICTION MODEL
+
+A prediction belongs to:
+
+- one fixture
+- optionally one Deck
+- one creator/admin
+
+Prediction fields should support:
+
+```text
+id
+fixtureId
+market
+selection
+odds
+confidence
+analysis
+visibility
+status
+deckId
+publishAt
+createdById
+createdAt
+updatedAt
+```
+
+Visibility:
+
+```text
+FREE
+PREMIUM
+```
+
+Publishing:
+
+```text
+DRAFT
+SCHEDULED
+PUBLISHED
+ARCHIVED
+```
+
+Result:
+
+```text
+PENDING
+WON
+LOST
+VOID
+PUSH
+CANCELLED
+```
+
+---
+
+# 10. DECK SYSTEM
+
+Decks are the major Tips Deck branding feature.
+
+Examples:
+
+```text
+Free Deck
+Safe Deck
+Value Deck
+Score Deck
+Accumulator Deck
+VIP Deck
+```
+
+Do NOT hardcode them.
+
+Admin can manage:
+
+- name
+- slug
+- description
+- icon
+- visual identifier
+- free/premium
+- price
+- duration
+- active status
+- sort order
+
+---
+
+# 11. PUBLIC WEBSITE
+
+Eventually support:
+
+```text
+/
+ /predictions
+ /predictions/[slug]
+ /results
+ /performance
+ /vip
+ /pricing
+ /about
+ /contact
+ /responsible-betting
+ /terms
+ /privacy
+```
+
+The main homepage should contain:
+
+- clean header
+- strong hero
+- Today's predictions
+- Yesterday / Today / Tomorrow tabs
+- free/premium indicators
+- recent performance
+- Deck previews
+- social/community links
+- responsible betting note
+
+---
+
+# 12. PREDICTION CARD
+
+Prediction cards must prioritise clarity.
+
+Example:
+
+```text
+Premier League
+8:00 PM
+
+ARSENAL
+vs
+CHELSEA
+
+Prediction
+Over 1.5 Goals
+
+Odds
+1.42
+
+Confidence
+78%
+
+FREE PICK
+
+View Analysis
+```
+
+Premium:
+
+```text
+Manchester City
+vs
+Liverpool
+
+🔒 PREMIUM PICK
+
+Safe Deck
+
+Unlock Prediction
+```
+
+Premium content must be protected on the server.
+
+Do not send locked prediction details to unauthorised users and merely hide them with CSS.
+
+---
+
+# 13. YESTERDAY / TODAY / TOMORROW
+
+This is a key product flow.
+
+The user should easily switch between:
+
+```text
+Yesterday
+Today
+Tomorrow
+```
+
+Yesterday shows results.
+
+Today shows active predictions.
+
+Tomorrow shows upcoming predictions where available.
+
+---
+
+# 14. ADMIN
+
+Admin lives inside:
+
+```text
+/admin
+```
+
+Do NOT create a separate application.
+
+The admin UI should feel like a professional SaaS dashboard.
+
+Main areas:
+
+```text
+/admin
+/admin/fixtures
+/admin/predictions
+/admin/predictions/new
+/admin/decks
+/admin/results
+/admin/users
+/admin/subscriptions
+/admin/payments
+/admin/settings
+```
+
+---
+
+# 15. ADMIN FIXTURE FLOW
+
+Admin should see today's synced fixtures.
+
+Example:
+
+```text
+TODAY'S FIXTURES
+
+Premier League
+
+Arsenal vs Chelsea
+15:00
+
+Liverpool vs Newcastle
+17:30
+```
+
+Clicking one should open prediction creation.
+
+The fixture provides automatically:
+
+- league
+- teams
+- logos
+- kickoff
+- external fixture ID
+
+Admin only enters:
+
+- market
+- prediction
+- odds
+- confidence
+- analysis
+- Deck
+- visibility
+- publication time
+
+---
+
+# 16. RESULTS + SETTLEMENT
+
+When fixture scores update, the application should support automatic settlement for basic markets.
+
+Initially:
+
+```text
+Home Win
+Draw
+Away Win
+Double Chance
+Over 0.5
+Over 1.5
+Over 2.5
+Under 1.5
+Under 2.5
+BTTS Yes
+BTTS No
+Correct Score
+```
+
+Unsupported markets should require manual settlement.
+
+Admin may override results.
+
+Every override must be logged.
+
+---
+
+# 17. PERFORMANCE TRACKING
+
+Do NOT allow administrators to type fake win percentages manually.
+
+Calculate performance from database records.
+
+Metrics:
+
+- total picks
+- wins
+- losses
+- pending
+- void
+- win rate
+- average odds
+- performance by Deck
+- performance by league
+- performance by market
+- recent streak
+
+Example:
+
+```text
+1,284 Total Picks
+914 Won
+370 Lost
+71.2% Win Rate
+```
+
+Filters:
+
+```text
+7 Days
+30 Days
+All Time
+League
+Market
+Deck
+```
+
+---
+
+# 18. AUTHENTICATION
+
+Eventually support:
+
+- register
+- login
+- logout
+- forgot password
+- reset password
+- email verification
+- session revocation
+
+Roles:
+
+```text
+USER
+TIPSTER
+EDITOR
+ADMIN
+SUPER_ADMIN
+```
+
+Protect `/admin`.
+
+Use server-side authorization.
+
+---
+
+# 19. PREMIUM ACCESS
+
+Users should be able to purchase:
+
+- specific Deck access
+- weekly access
+- monthly access
+- optional one-time access
+
+Pricing must be database-managed.
+
+Admin must be able to change plans without code edits.
+
+---
+
+# 20. PAYMENTS
+
+Plan for Paystack first.
+
+Support Ghana-friendly payment channels where available.
+
+Payment status:
+
+```text
+PENDING
+SUCCESS
+FAILED
+CANCELLED
+REFUNDED
+```
+
+Never trust client-side confirmation.
+
+Verify through server-to-server calls and webhooks.
+
+Use idempotency.
+
+---
+
+# 21. PERFORMANCE
+
+Tips Deck should be extremely fast on mobile.
+
+Prioritise:
+
+- server rendering
+- caching
+- minimal JavaScript
+- image optimisation
+- database indexes
+- pagination
+- skeleton loading
+- lazy loading
+
+Do not turn every page into a client component.
+
+---
+
+# 22. SEO
+
+Prediction pages should be indexable.
+
+Use:
+
+- Metadata API
+- canonical URLs
+- Open Graph
+- sitemap
+- robots.txt
+- structured data where relevant
+
+Use human-readable prediction URLs.
+
+---
+
+# 23. SECURITY
+
+Implement where applicable:
+
+- secure authentication
+- server-side authorization
+- Zod validation
+- rate limiting
+- secure cookies
+- CSRF-aware design
+- audit logs
+- secret protection
+- database validation
+
+Never expose secrets to client bundles.
+
+---
+
+# 24. DEVELOPMENT STAGES
+
+## STAGE 1 — FOUNDATION
+
+Build ONLY:
+
+- initialise Next.js
+- TypeScript
+- Tailwind
+- project structure
+- reusable design system
+- responsive public shell
+- header/footer/navigation
+- Prisma setup
+- PostgreSQL connection
+- initial database schema
+- seed framework
+- `.env.example`
+- README foundations
+
+Create placeholder homepage layout only.
+
+Do NOT build authentication, payments, football API or admin business logic yet.
+
+At the end:
+
+- typecheck
+- lint
+- test
+- build
+- fix all issues
+- summarize Stage 1
+- STOP
+
+---
+
+## STAGE 2 — FIXTURES + FOOTBALL DATA
+
+Build ONLY:
+
+- League model
+- Team model
+- Fixture model
+- mock football provider
+- FootballProvider abstraction
+- fixture sync service
+- cron-compatible fixture sync route
+- yesterday/today/tomorrow fixture queries
+- seed football data
+- `/admin/fixtures`
+- basic fixture browser
+
+No predictions yet.
+
+At the end:
+
+- test sync
+- typecheck
+- lint
+- build
+- summarize
+- STOP
+
+---
+
+## STAGE 3 — PREDICTIONS + DECKS
+
+Build:
+
+- Prediction model
+- Deck model
+- prediction creation
+- prediction editing
+- publish/unpublish
+- free vs premium
+- Deck management
+- admin prediction screens
+- public prediction cards
+- Yesterday / Today / Tomorrow tabs
+- prediction detail page
+
+Use dummy access rules for premium for now.
+
+No payment system yet.
+
+Test thoroughly.
+
+STOP when complete.
+
+---
+
+## STAGE 4 — AUTHENTICATION + USERS
+
+Build:
+
+- User
+- roles
+- login
+- register
+- logout
+- protected account
+- admin authorization
+- password reset architecture
+- user profile
+
+Connect premium visibility to authenticated user state but do not implement payment yet.
+
+STOP when complete.
+
+---
+
+## STAGE 5 — RESULTS + SETTLEMENT
+
+Build:
+
+- score synchronisation
+- result updates
+- automatic settlement
+- manual settlement
+- admin override
+- audit trail
+- result indicators
+- historical results page
+
+Test settlement logic heavily.
+
+STOP.
+
+---
+
+## STAGE 6 — PERFORMANCE ANALYTICS
+
+Build:
+
+- real calculated statistics
+- win rate
+- deck performance
+- league performance
+- market performance
+- date filters
+- public performance page
+- admin performance view
+
+No fake/hardcoded statistics.
+
+STOP.
+
+---
+
+## STAGE 7 — PREMIUM + PAYMENTS
+
+Build:
+
+- subscriptions
+- plans
+- purchases
+- Paystack provider abstraction
+- checkout
+- verification
+- webhook
+- premium unlock
+- expiry
+- payment history
+
+Premium data protection must happen server-side.
+
+STOP.
+
+---
+
+## STAGE 8 — CONTENT + NOTIFICATIONS
+
+Build:
+
+- article CMS
+- social links
+- Telegram/WhatsApp settings
+- in-app notifications
+- notification architecture
+- share prediction feature
+
+STOP.
+
+---
+
+## STAGE 9 — SEO + POLISH
+
+Build:
+
+- metadata
+- sitemap
+- robots
+- social previews
+- structured data where appropriate
+- loading states
+- error pages
+- empty states
+- mobile refinement
+- accessibility improvements
+
+STOP.
+
+---
+
+## STAGE 10 — PRODUCTION HARDENING
+
+Do:
+
+- security review
+- DB indexes review
+- performance review
+- test coverage
+- audit production environment variables
+- deployment configuration
+- cron configuration
+- database backup guidance
+- Paystack webhook deployment notes
+- football provider setup instructions
+
+Run:
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+Fix everything.
+
+Provide final production README.
+
+---
+
+# 25. CRITICAL RULES
+
+Do NOT:
+
+- use static arrays instead of database data once Prisma is introduced
+- expose premium predictions to free users
+- hardcode football matches
+- scrape football sites
+- hardcode VIP prices
+- invent performance statistics
+- use localStorage as the main business database
+- create duplicate backend services
+- overuse client components
+- skip validation
+- leave critical TODOs
+- move to the next stage without being instructed
+
+Always favour simple, maintainable production code.
+
+---
+
+# FIRST TASK
+
+Begin with **STAGE 1 ONLY**.
+
+Do not implement anything from Stage 2 or later.
+
+Once Stage 1 is complete:
+
+1. run all checks
+2. fix problems
+3. clearly report what was created
+4. list important files
+5. list any environment variables required
+6. STOP
+
+Wait for explicit instruction before starting Stage 2.

@@ -1,0 +1,14 @@
+.git
+.next
+.npm-cache
+.open-next
+.wrangler
+.vercel
+.env
+.env.local
+.env.*.local
+.dev.vars
+node_modules
+generated
+coverage
+*.tsbuildinfo

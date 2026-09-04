@@ -1,0 +1,385 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Foundational application configuration. Domain models are added in their
+/// designated development stages to keep migrations small and reviewable.
+model Setting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  group       String   @default("general")
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([group])
+  @@map("settings")
+}
+
+enum FixtureStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  POSTPONED
+  CANCELLED
+}
+
+enum PredictionVisibility {
+  FREE
+  PREMIUM
+}
+
+enum PredictionPublishStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PredictionResult {
+  PENDING
+  WON
+  LOST
+  VOID
+  PUSH
+  CANCELLED
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+  TIPSTER
+  USER
+}
+
+enum PlanScope {
+  ALL_PREMIUM
+  DECK
+}
+
+enum PaymentProvider {
+  PAYSTACK
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum SlipCategory {
+  FREE
+  VIP1
+  VIP2
+  VIP3
+}
+
+model League {
+  id         String    @id @default(cuid())
+  externalId String    @unique
+  name       String
+  slug       String    @unique
+  country    String
+  logoUrl    String?
+  fixtures   Fixture[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([country, name])
+  @@map("leagues")
+}
+
+model Team {
+  id           String    @id @default(cuid())
+  externalId   String    @unique
+  name         String
+  shortName    String?
+  country      String?
+  logoUrl      String?
+  homeFixtures Fixture[] @relation("HomeTeam")
+  awayFixtures Fixture[] @relation("AwayTeam")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([name])
+  @@map("teams")
+}
+
+model Fixture {
+  id           String        @id @default(cuid())
+  externalId   String        @unique
+  leagueId     String
+  homeTeamId   String
+  awayTeamId   String
+  kickoffAt    DateTime
+  status       FixtureStatus @default(SCHEDULED)
+  homeScore    Int?
+  awayScore    Int?
+  venue        String?
+  provider     String        @default("mock")
+  providerData Json?
+  predictions  Prediction[]
+  league       League        @relation(fields: [leagueId], references: [id], onDelete: Restrict)
+  homeTeam     Team          @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Restrict)
+  awayTeam     Team          @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Restrict)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([kickoffAt])
+  @@index([leagueId, kickoffAt])
+  @@index([status, kickoffAt])
+  @@map("fixtures")
+}
+
+model Deck {
+  id               String         @id @default(cuid())
+  name             String
+  slug             String         @unique
+  description      String
+  icon             String?
+  visualIdentifier String?
+  isPremium        Boolean        @default(false)
+  isActive         Boolean        @default(true)
+  sortOrder        Int            @default(0)
+  predictions      Prediction[]
+  plans            Plan[]
+  subscriptions    Subscription[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("decks")
+}
+
+model Prediction {
+  id          String                  @id @default(cuid())
+  slug        String                  @unique
+  fixtureId   String
+  deckId      String?
+  market      String
+  selection   String
+  odds        Decimal                 @db.Decimal(6, 2)
+  confidence  Int
+  analysis    String
+  visibility  PredictionVisibility    @default(FREE)
+  status      PredictionPublishStatus @default(DRAFT)
+  result      PredictionResult        @default(PENDING)
+  publishAt   DateTime?
+  createdById String
+  bookingId   String?
+  fixture     Fixture                 @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
+  deck        Deck?                   @relation(fields: [deckId], references: [id], onDelete: SetNull)
+  createdBy   User                    @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  booking     Booking?                @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  @@index([fixtureId, status])
+  @@index([deckId, status])
+  @@index([status, publishAt])
+  @@index([visibility, status])
+  @@index([bookingId])
+  @@map("predictions")
+}
+
+model User {
+  id                 String               @id @default(cuid())
+  username           String               @unique
+  email              String               @unique
+  passwordHash       String
+  displayName        String?
+  phone              String?
+  role               UserRole             @default(USER)
+  emailVerifiedAt    DateTime?
+  premiumAccessUntil DateTime?
+  isActive           Boolean              @default(true)
+  lastLoginAt        DateTime?
+  predictions        Prediction[]
+  sessions           Session[]
+  passwordResets     PasswordResetToken[]
+  auditLogs          AuditLog[]
+  payments           Payment[]
+  subscriptions      Subscription[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([role, isActive])
+  @@index([premiumAccessUntil])
+  @@map("users")
+}
+
+model Plan {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  description   String
+  priceMinor    Int            @default(0)
+  currency      String         @default("GHS")
+  durationDays  Int
+  scope         PlanScope      @default(ALL_PREMIUM)
+  deckId        String?
+  isActive      Boolean        @default(true)
+  isSoldOut     Boolean        @default(false)
+  sortOrder     Int            @default(0)
+  deck          Deck?          @relation(fields: [deckId], references: [id], onDelete: SetNull)
+  payments      Payment[]
+  subscriptions Subscription[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([deckId, isActive])
+  @@map("plans")
+}
+
+model Booking {
+  id          String       @id @default(cuid())
+  title       String       @default("Booking Code")
+  platform    String
+  code        String       @unique
+  category    SlipCategory @default(FREE)
+  shareUrl    String?
+  totalOdds   Decimal?     @db.Decimal(12, 2)
+  priceMinor  Int?
+  deadline    DateTime?
+  bookingDate DateTime     @db.Date
+  isActive    Boolean      @default(true)
+  deletedAt   DateTime?
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  predictions Prediction[]
+  payments    Payment[]
+
+  @@index([bookingDate, isActive, sortOrder])
+  @@index([category, bookingDate, isActive])
+  @@index([deletedAt])
+  @@map("bookings")
+}
+
+model Payment {
+  id                String          @id @default(cuid())
+  reference         String          @unique
+  provider          PaymentProvider @default(PAYSTACK)
+  providerReference String?
+  userId            String
+  planId            String
+  bookingId         String?
+  amountMinor       Int
+  currency          String
+  status            PaymentStatus   @default(PENDING)
+  authorizationUrl  String?
+  accessCode        String?
+  gatewayResponse   String?
+  providerData      Json?
+  paidAt            DateTime?
+  verifiedAt        DateTime?
+  user              User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan              Plan            @relation(fields: [planId], references: [id], onDelete: Restrict)
+  booking           Booking?        @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  subscription      Subscription?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([bookingId, userId, status])
+  @@index([status, createdAt])
+  @@index([provider, providerReference])
+  @@map("payments")
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  userId           String
+  planId           String
+  paymentId        String             @unique
+  status           SubscriptionStatus @default(ACTIVE)
+  startsAt         DateTime
+  expiresAt        DateTime
+  grantsAllPremium Boolean            @default(true)
+  deckId           String?
+  user             User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan             Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payment          Payment            @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  deck             Deck?              @relation(fields: [deckId], references: [id], onDelete: SetNull)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([userId, status, expiresAt])
+  @@index([deckId, status, expiresAt])
+  @@map("subscriptions")
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  userId     String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  userAgent  String?
+  ipAddress  String?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt, revokedAt])
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@index([userId, expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model AuthAttempt {
+  id         String   @id @default(cuid())
+  identifier String
+  ipAddress  String?
+  succeeded  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, createdAt])
+  @@index([ipAddress, createdAt])
+  @@map("auth_attempts")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}

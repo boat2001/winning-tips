@@ -1,0 +1,2 @@
+ALTER TABLE "bookings" ADD COLUMN "priceMinor" INTEGER;
+ALTER TABLE "plans" ALTER COLUMN "priceMinor" SET DEFAULT 0;
