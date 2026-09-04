@@ -25,7 +25,7 @@ export function AccountPreview({ mode, next = "/dashboard" }: { mode: "login" | 
         <p className="text-sm text-muted">
           {register ? "Already have an account? " : "No account yet? "}
           <Link href={register ? "/login" : "/register"} className="font-semibold text-blue hover:text-ink">
-            {register ? "Sign in" : "Create one free"}
+            {register ? "Log in" : "Create one free"}
           </Link>
         </p>
       }
