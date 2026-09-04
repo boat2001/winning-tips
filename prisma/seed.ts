@@ -134,7 +134,8 @@ async function main() {
   });
 
   if (!seedDemoData) {
-    console.log("Seeded configuration only: 4 decks, 3 VIP plans, brand settings. No fixtures, predictions, slips or accounts.");
+    const admin = adminEmail && adminPassword ? "1 super-admin" : "no accounts";
+    console.log(`Seeded configuration only: 4 decks, 3 VIP plans, brand settings, ${admin}. No fixtures, predictions or slips.`);
     return;
   }
 
