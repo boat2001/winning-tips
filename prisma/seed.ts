@@ -56,13 +56,21 @@ async function main() {
     },
   });
 
+  // Demo content is opt-in. Decks, plans and settings below are configuration
+  // the app cannot work without - four call sites map SportyBet categories onto
+  // the deck slugs - but mock fixtures and sample predictions must never land in
+  // a real database, so they only run with SEED_DEMO_DATA=true.
+  const seedDemoData = process.env.SEED_DEMO_DATA === "true";
+
   const windows = getFixtureDateWindows();
 
-  await syncFixturesForDates(
-    new MockFootballProvider(),
-    windows.map((window) => window.date),
-    createPrismaFixtureRepository(prisma),
-  );
+  if (seedDemoData) {
+    await syncFixturesForDates(
+      new MockFootballProvider(),
+      windows.map((window) => window.date),
+      createPrismaFixtureRepository(prisma),
+    );
+  }
 
   const freeDeck = await prisma.deck.upsert({
     where: { slug: "free-deck" },
@@ -124,6 +132,11 @@ async function main() {
     update: { name: "VIP 3", description: "Access to our top-tier VIP 3 sports predictions.", currency: "GHS", durationDays: 1, scope: "DECK", deckId: vipThreeDeck.id, sortOrder: 3 },
     create: { name: "VIP 3", slug: "vip-monthly", description: "Access to our top-tier VIP 3 sports predictions.", priceMinor: 0, currency: "GHS", durationDays: 1, scope: "DECK", deckId: vipThreeDeck.id, sortOrder: 3 },
   });
+
+  if (!seedDemoData) {
+    console.log("Seeded configuration only: 4 decks, 3 VIP plans, brand settings. No fixtures, predictions, slips or accounts.");
+    return;
+  }
 
   const todayFixtures = await prisma.fixture.findMany({
     where: {
