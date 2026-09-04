@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { normalizeDatabaseConnectionString } from "../lib/db/connection-string";
 import { getFixtureDateWindows } from "../lib/football/dates";
 import { MockFootballProvider } from "../lib/football/mock-provider";
+import { siteConfig } from "../lib/config/site";
 import { createPrismaFixtureRepository } from "../lib/football/repository";
 import { syncFixturesForDates } from "../lib/football/sync";
 
@@ -36,15 +37,15 @@ async function main() {
     });
   }
 
+  // Sourced from siteConfig rather than repeated here, and written on update as
+  // well as create, so a re-seed heals brand drift instead of preserving it.
+  const identity = { name: siteConfig.name, tagline: siteConfig.tagline };
   await prisma.setting.upsert({
     where: { key: "site.identity" },
-    update: {},
+    update: { value: identity },
     create: {
       key: "site.identity",
-      value: {
-        name: "Smart Tips",
-        tagline: "Smarter sports picks, every day.",
-      },
+      value: identity,
       description: "Public brand identity defaults.",
       group: "brand",
       isPublic: true,
