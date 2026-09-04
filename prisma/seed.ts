@@ -30,10 +30,14 @@ async function main() {
   if (adminEmail && adminPassword) {
     if (adminPassword.length < 8) throw new Error("SEED_ADMIN_PASSWORD must be at least 8 characters.");
     const passwordHash = await bcrypt.hash(adminPassword, 12);
+    // displayName is set on update as well as create: a database seeded under
+    // the old brand otherwise keeps its name forever, the same way site.identity
+    // did.
+    const adminDisplayName = `${siteConfig.name} Admin`;
     await prisma.user.upsert({
       where: { email: adminEmail },
-      update: { passwordHash, role: "SUPER_ADMIN", isActive: true },
-      create: { email: adminEmail, username: adminUsername, displayName: "Smart Tips Admin", passwordHash, role: "SUPER_ADMIN", emailVerifiedAt: new Date() },
+      update: { passwordHash, role: "SUPER_ADMIN", isActive: true, displayName: adminDisplayName },
+      create: { email: adminEmail, username: adminUsername, displayName: adminDisplayName, passwordHash, role: "SUPER_ADMIN", emailVerifiedAt: new Date() },
     });
   }
 
