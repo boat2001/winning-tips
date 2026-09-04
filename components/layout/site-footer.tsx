@@ -7,7 +7,7 @@ const groups = [
   {
     title: "Tips",
     links: [
-      ["Today", "/"],
+      ["Home", "/"],
       ["All predictions", "/predictions"],
       ["VIP slips", "/vip"],
       ["Your dashboard", "/dashboard"],
@@ -69,11 +69,18 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-line-2">
-        <div className="mx-auto flex max-w-[76rem] flex-col gap-2 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-[76rem] flex-col gap-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="eyebrow">
             © {new Date().getFullYear()} {siteConfig.name}
           </p>
-          <p className="eyebrow">18+ only · Bet responsibly · Never chase a loss</p>
+          {/* The run-on line wrapped mid-phrase on phones, so the last clause
+              breaks onto its own line there. The middle separator only appears
+              once there is width to set the whole thing as one row. */}
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-x-2">
+            <p className="eyebrow">18+ only · Bet responsibly</p>
+            <span aria-hidden="true" className="eyebrow hidden sm:inline">·</span>
+            <p className="eyebrow">Never chase a loss</p>
+          </div>
         </div>
       </div>
     </footer>

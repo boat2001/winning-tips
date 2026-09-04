@@ -8,7 +8,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { communityLinks, siteConfig } from "@/lib/config/site";
 
 const publicNavigation: readonly NavItem[] = [
-  { label: "Today", href: "/" },
+  { label: "Home", href: "/" },
   { label: "Predictions", href: "/predictions" },
   { label: "VIP", href: "/vip" },
   { label: "About", href: "/about" },

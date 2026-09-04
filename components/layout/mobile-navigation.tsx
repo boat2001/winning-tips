@@ -102,20 +102,22 @@ export function MobileNavigation({
             })}
           </nav>
 
-          <div className="border-b border-line px-5 py-5">
+          {/* One row. Signed in this can hold three items on a narrow phone, so it
+              wraps rather than overflowing. */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-line px-5 py-4">
             {secondary.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className="block py-2 text-sm font-semibold uppercase tracking-[0.08em] text-ink-2 transition-colors hover:text-blue"
+                className="py-2 text-sm font-semibold uppercase tracking-[0.08em] text-ink-2 transition-colors hover:text-blue"
               >
                 {item.label}
               </Link>
             ))}
             {authenticated ? (
               <form action={logoutAction}>
-                <button className="block py-2 text-sm font-semibold uppercase tracking-[0.08em] text-ink-2 transition-colors hover:text-blue">
+                <button className="py-2 text-sm font-semibold uppercase tracking-[0.08em] text-ink-2 transition-colors hover:text-blue">
                   Log out
                 </button>
               </form>
@@ -125,7 +127,10 @@ export function MobileNavigation({
           <div className="mt-auto bg-paper px-5 py-6">
             <p className="eyebrow eyebrow-blue">Free community</p>
             <ChannelLinks className="mt-3 flex-nowrap" full />
-            <p className="eyebrow mt-5">18+ · Predictions are opinions, not guarantees</p>
+            <div className="mt-5 flex flex-col gap-1">
+              <p className="eyebrow">18+ only</p>
+              <p className="eyebrow">Predictions are opinions, not guarantees</p>
+            </div>
           </div>
         </div>
       ) : null}
