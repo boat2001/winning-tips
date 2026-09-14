@@ -1,29 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Oswald } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { getSiteUrl, siteConfig } from "@/lib/config/site";
 
-const display = Oswald({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-oswald",
-  display: "swap",
+const brand = localFont({
+  src: [
+    { path: "../public/fonts/poppins-regular.ttf", weight: "400", style: "normal" },
+    { path: "../public/fonts/poppins-semibold.ttf", weight: "600", style: "normal" },
+    { path: "../public/fonts/poppins-bold.ttf", weight: "700", style: "normal" },
+    { path: "../public/fonts/poppins-extrabold.ttf", weight: "800", style: "normal" },
+  ],
+  variable: "--font-poppins", display: "swap",
 });
-
-const sans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-plex-sans",
-  display: "swap",
-});
-
-const mono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-mono",
-  display: "swap",
-});
+const script = localFont({src:"../public/fonts/caveat.ttf", variable:"--font-caveat", display:"swap", preload:false});
 
 const siteUrl = getSiteUrl();
 const headline = `${siteConfig.name} - Daily Football Predictions & VIP Slips`;
@@ -74,13 +64,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  colorScheme: "light",
-  themeColor: "#f4f2ed",
+  colorScheme: "dark",
+  themeColor: "#001938",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${brand.variable} ${script.variable}`}>
       <body>
         {children}
         <Analytics />

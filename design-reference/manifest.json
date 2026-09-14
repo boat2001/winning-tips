@@ -1,0 +1,106 @@
+{
+  "$comment": "Design reference manifest (development guide 13.1). Every screen implementation must be checked against the mocks listed here before it is called done. Status values: approved | derived | missing.",
+  "referenceViewports": {
+    "desktop": {
+      "width": 1440,
+      "height": 1024,
+      "implementationRange": "1200px and above"
+    },
+    "tablet": {
+      "width": 834,
+      "height": 1112,
+      "implementationRange": "768-1199px"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "implementationRange": "320-767px"
+    }
+  },
+  "screens": {
+    "landing": {
+      "route": "/",
+      "audience": "guest",
+      "desktop": "desktop/landing.png",
+      "tablet": "tablet/landing.png",
+      "mobile": "mobile/landing.png",
+      "status": "approved",
+      "notes": "Public marketing page. Signed-in users are redirected to /home."
+    },
+    "home": {
+      "route": "/home",
+      "audience": "member",
+      "desktop": "desktop/home.png",
+      "tablet": "tablet/home.png",
+      "mobile": "mobile/home.png",
+      "status": "approved"
+    },
+    "tips": {
+      "route": "/tips",
+      "audience": "member",
+      "desktop": "desktop/tips.png",
+      "tablet": "tablet/tips.png",
+      "mobile": "mobile/tips.png",
+      "status": "approved"
+    },
+    "results": {
+      "route": "/results",
+      "audience": "member",
+      "desktop": "desktop/results.png",
+      "tablet": "tablet/results.png",
+      "mobile": "mobile/results.png",
+      "status": "approved"
+    },
+    "community": {
+      "route": "/community",
+      "audience": "member",
+      "desktop": "desktop/community.png",
+      "tablet": "tablet/community.png",
+      "mobile": "mobile/community.png",
+      "status": "approved"
+    },
+    "profile": {
+      "route": "/profile",
+      "audience": "member",
+      "desktop": "desktop/profile.png",
+      "tablet": "tablet/profile.png",
+      "mobile": "mobile/profile.png",
+      "status": "approved"
+    },
+    "tip-detail": {
+      "route": "/tips/[slug]",
+      "audience": "member",
+      "desktop": null,
+      "tablet": null,
+      "mobile": null,
+      "status": "derived",
+      "notes": "No mock supplied. Derived from the listing card language and guide 14.5. Form, head-to-head and bookmaker panels state that their data source is not connected rather than showing placeholders. Awaiting product-owner review."
+    },
+    "notifications": {
+      "route": "/notifications",
+      "audience": "member",
+      "desktop": null,
+      "tablet": null,
+      "mobile": null,
+      "status": "derived",
+      "notes": "No mock supplied. Exists because the top-bar bell links here from every screen. Renders the honest empty state per guide 14.10; no notifications table yet. Awaiting product-owner review."
+    }
+  },
+  "sharedAssets": {
+    "directory": "shared/source-assets",
+    "$comment": "Originals at full resolution. Production derivatives are generated into public/assets and recorded in public/assets/asset-manifest.json.",
+    "files": [
+      "winning-tips-logo.png",
+      "players-in-one.png",
+      "happy-player.png",
+      "b-ball-player.png",
+      "tennis-player.png",
+      "happy-bet-winners.png",
+      "winning-trophy.png",
+      "phone-asset.png",
+      "balls.png",
+      "pitch.png",
+      "green-divider-design.png"
+    ]
+  }
+}

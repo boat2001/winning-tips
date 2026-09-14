@@ -8,11 +8,16 @@ export type ProviderFixtureStatus =
 export type JsonValue = string | number | boolean | null | JsonValue[] | JsonObject;
 export type JsonObject = { [key: string]: JsonValue };
 
+/** The sports the product publishes for. Mirrors the database enum. */
+export type ProviderSport = "FOOTBALL" | "BASKETBALL" | "TENNIS";
+
 export interface LeagueInput {
   externalId: string;
   name: string;
   country: string;
   logoUrl?: string | null;
+  /** Omitted by feeds that only carry one sport; the repository defaults it. */
+  sport?: ProviderSport;
 }
 
 export interface TeamInput {

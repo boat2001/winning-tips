@@ -14,6 +14,10 @@ type VipPlan = {
 type VipBooking = {
   id: string;
   category: string;
+  priceMinor: number | null;
+  currency: string;
+  isSoldOut: boolean;
+  salesClosed: boolean;
   predictions: Array<{
     id: string;
     result: string;
@@ -51,13 +55,13 @@ const tierAccent: Record<string, string> = {
   VIP3: "#a5811b",
 };
 
-function formatCheckoutPrice(amountMinor: number) {
+function formatCheckoutPrice(amountMinor: number, currency: string) {
   const hasPesewas = amountMinor % 100 !== 0;
   const amount = new Intl.NumberFormat("en-GH", {
     minimumFractionDigits: hasPesewas ? 2 : 0,
     maximumFractionDigits: 2,
   }).format(amountMinor / 100);
-  return `GHS ${amount}`;
+  return `${currency} ${amount}`;
 }
 
 function resultChip(result: string) {
@@ -101,9 +105,14 @@ export function FeaturedVipMatches({
             const predictions = booking?.predictions ?? [];
             const hasResults = predictions.some((prediction) => prediction.result !== "PENDING");
             const isPurchased = !previewPurchaseCtas && Boolean(booking && purchasedBookingIds.includes(booking.id));
-            const notPublished = !booking || predictions.length === 0 || plan.priceMinor <= 0;
-            const status = notPublished ? "unpublished" : plan.isSoldOut ? "sold-out" : hasResults ? "results" : "available";
-            const checkoutPrice = formatCheckoutPrice(plan.priceMinor);
+            // The card carries the price and the sales state. The tier's plan is
+            // only a fallback for a day whose card has not been loaded yet.
+            const priceMinor = booking?.priceMinor ?? plan.priceMinor;
+            const closed = booking?.salesClosed ?? false;
+            const soldOut = booking ? booking.isSoldOut : plan.isSoldOut;
+            const notPublished = !booking || predictions.length === 0 || priceMinor <= 0;
+            const status = notPublished ? "unpublished" : soldOut || closed ? "sold-out" : hasResults ? "results" : "available";
+            const checkoutPrice = formatCheckoutPrice(priceMinor, booking?.currency ?? plan.currency);
             const accent = statusAccent[status] ?? tierAccent[category ?? "VIP1"] ?? "#0b5cff";
 
             return (
@@ -121,18 +130,25 @@ export function FeaturedVipMatches({
                   {predictions.length ? (
                     predictions.map((prediction) => {
                       const chip = resultChip(prediction.result);
+                      /** Settled legs carry their market and selection; pending ones arrive redacted. */
+                      const tip = prediction.market && prediction.selection
+                        ? `${prediction.market} · ${prediction.selection}`
+                        : null;
                       return (
-                        <div key={prediction.id} className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5 last:border-b-0">
-                          <p className="min-w-0 flex-1 text-sm font-medium leading-snug">
-                            {prediction.fixture.homeTeam.name}{" "}
-                            <span className="font-normal text-faint">v</span>{" "}
-                            {prediction.fixture.awayTeam.name}
-                          </p>
-                          {chip ? (
-                            <span className={`${chip.className} shrink-0`} aria-label={chip.label}>
-                              {chip.label}
-                            </span>
-                          ) : null}
+                        <div key={prediction.id} className="border-b border-line px-4 py-2.5 last:border-b-0">
+                          <div className={`flex justify-between gap-3 ${tip ? "items-start" : "items-center"}`}>
+                            <p className="min-w-0 flex-1 text-sm font-medium leading-snug">
+                              {prediction.fixture.homeTeam.name}{" "}
+                              <span className="font-normal text-faint">v</span>{" "}
+                              {prediction.fixture.awayTeam.name}
+                            </p>
+                            {chip ? (
+                              <span className={`${chip.className} shrink-0`} aria-label={chip.label}>
+                                {chip.label}
+                              </span>
+                            ) : null}
+                          </div>
+                          {tip ? <p className="eyebrow mt-1.5">{tip}</p> : null}
                         </div>
                       );
                     })

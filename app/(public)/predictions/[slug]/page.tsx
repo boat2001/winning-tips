@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const title = prediction ? `${prediction.homeTeam} vs ${prediction.awayTeam} Prediction` : "Prediction";
   const description = prediction
     ? `Football tip and match analysis for ${prediction.homeTeam} vs ${prediction.awayTeam}.`
-    : "Smart Tips football prediction.";
+    : "Winning Tips football prediction.";
   return {
     title,
     description,

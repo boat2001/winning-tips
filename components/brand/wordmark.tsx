@@ -1,5 +1,5 @@
 import Image from "next/image";
-import markImage from "@/public/brand/smart-tips-mark.png";
+import markImage from "@/public/brand/winning-tips-mark.png";
 
 /* The mark is cropped to its own edges, so it is sized by height and left to
    find its own width. Its natural ratio is 330x277. */
@@ -16,8 +16,8 @@ const textSize = {
 } as const;
 
 /**
- * The single source of the Smart Tips lockup: the ball-and-arrow mark beside a
- * condensed wordmark that splits SMART (ink) from TIPS (blue), echoing the blue
+ * The single source of the Winning Tips lockup: the ball-and-arrow mark beside a
+ * condensed wordmark that splits WINNING (ink) from TIPS (blue), echoing the blue
  * arrow in the mark. Used by the header, footer, auth screens and admin shell so
  * the brand never drifts between surfaces. The PNG carries real transparency, so
  * it sits on any of the three paper tints without a knockout box behind it.
@@ -46,7 +46,7 @@ export function Wordmark({
         <span
           className={`display-heading whitespace-nowrap ${textSize[size]} font-bold leading-none tracking-[0.01em] text-ink`}
         >
-          Smart<span className="text-blue">Tips</span>
+          Winning<span className="text-blue">Tips</span>
         </span>
       ) : null}
     </span>

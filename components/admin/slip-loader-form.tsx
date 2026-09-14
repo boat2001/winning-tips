@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { loadBookingSlip, type SlipLoaderState } from "@/app/admin/bookings/actions";
+import { enabledCountries, launchCountry } from "@/lib/config/countries";
 
 const input = "mt-2 h-11 w-full rounded-sharp border border-line bg-white px-3 text-sm outline-none focus:border-blue focus:ring-4 focus:ring-blue/10";
 
@@ -39,6 +40,7 @@ export function SlipLoaderModal() {
             <form ref={formRef} action={action} className="p-5 sm:p-6">
               <div className="grid gap-5">
                 <label className="text-sm font-bold text-ink-2">SportyBet booking code<input name="code" required autoCapitalize="characters" autoComplete="off" placeholder="e.g. E81TN3" className={`${input} font-mono text-base font-bold uppercase tracking-[0.12em]`} /></label>
+                <label className="text-sm font-bold text-ink-2">Country edition<select name="countryCode" required defaultValue={launchCountry.countryCode} className={input}>{enabledCountries().map((country) => <option key={country.countryCode} value={country.countryCode}>{country.name} · {country.currency}</option>)}</select></label>
                 <label className="text-sm font-bold text-ink-2">Publish and sell as<select name="category" required defaultValue="" className={input}><option value="" disabled>Choose a plan</option><option value="FREE">Free Predictions</option><option value="VIP1">VIP 1 Package</option><option value="VIP2">VIP 2 Package</option><option value="VIP3">VIP 3 Package</option></select></label>
               </div>
               <button disabled={pending} className="mt-5 min-h-11 w-full rounded-sharp bg-[var(--color-blue)] px-5 text-sm font-semibold text-white transition hover:bg-blue disabled:cursor-wait disabled:bg-line-2">{pending ? "Loading matches…" : "Load and publish slip"}</button>

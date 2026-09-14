@@ -9,7 +9,7 @@ import { getDatabase } from "@/lib/db/client";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Settings",
-  description: "Manage your Smart Tips account details and review your payment history.",
+  description: "Manage your Winning Tips account details and review your payment history.",
   robots: { index: false, follow: false },
 };
 
@@ -45,7 +45,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     <>
       <PageMasthead kicker={`@${user.username}`} title={user.displayName || user.username} lede={`Signed in as ${user.email}`}>
         <div className="flex flex-wrap gap-5 border-y border-line-2 py-4">
-          <Link href="/dashboard" className="eyebrow eyebrow-blue transition-colors hover:text-ink">
+          <Link href="/home" className="eyebrow eyebrow-blue transition-colors hover:text-ink">
             Dashboard →
           </Link>
           <Link href="/activity" className="eyebrow eyebrow-blue transition-colors hover:text-ink">
@@ -77,7 +77,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 payments.map((payment) => (
                   <div key={payment.id} className="flex items-center justify-between gap-4 border-b border-line py-4">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{payment.plan.name}</p>
+                      <p className="truncate text-sm font-semibold">{(payment.plan?.name ?? "VIP card")}</p>
                       <p className="eyebrow mt-1.5 truncate">
                         <span className="num">{paymentDateFormatter.format(payment.createdAt)}</span> · {payment.reference}
                       </p>
@@ -112,7 +112,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 <dd className="num text-sm font-semibold">@{user.username}</dd>
               </div>
             </dl>
-            <Link href="/dashboard#my-vip-games" className="btn btn-ghost mt-6 w-full">
+            <Link href="/home#my-vip-games" className="btn btn-ghost mt-6 w-full">
               View your games
             </Link>
           </aside>

@@ -10,7 +10,7 @@ describe("site configuration", () => {
   });
 
   it("uses the approved product identity", () => {
-    expect(siteConfig.name).toBe("Smart Tips");
-    expect(siteConfig.tagline).toMatch(/win the cash/i);
+    expect(siteConfig.name).toBe("Winning Tips");
+    expect(siteConfig.tagline).toBe("Predict. Win. Together.");
   });
 });

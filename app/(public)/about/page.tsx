@@ -4,7 +4,7 @@ import { PageMasthead, SectionHead, Shell } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "Why Smart Tips publishes its reasoning, its losses and its full settled record.",
+  description: "Why Winning Tips publishes its reasoning, its losses and its full settled record.",
   alternates: { canonical: "/about" },
 };
 
@@ -20,7 +20,7 @@ export default function AboutPage() {
       <PageMasthead
         kicker="About"
         title="A tips site that shows its working"
-        lede="Smart Tips exists because most tipping services publish a selection, hide the reasoning, and quietly delete whatever loses. We wanted the opposite of that."
+        lede="Winning Tips exists because most tipping services publish a selection, hide the reasoning, and quietly delete whatever loses. We wanted the opposite of that."
       />
 
       <Shell className="pb-16">

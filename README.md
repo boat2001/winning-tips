@@ -1,13 +1,10 @@
-# Smart Tips
+# Winning Tips
 
-**Read the game. Win the cash.**
+**We always win**
 
-Smart Tips is a mobile-first football prediction platform designed around clear analysis, transparent results, and curated prediction Decks. This repository contains a single Next.js application for the public site, account area, premium experience, and future admin tools.
+Winning Tips is a mobile-first football prediction platform designed around clear analysis, transparent results, and curated prediction Decks. This repository contains a single Next.js application for the public site, account area, premium experience, and future admin tools.
 
 ## Stage status
-
-VIP 2: FHLCZX
-VIP 3: 90LUWU
 
 Stage 4 authentication and the Stage 7 premium-payment foundation are implemented. Results settlement and performance analytics remain future stages.
 
@@ -16,13 +13,13 @@ The application now includes:
 - Next.js 16 App Router with strict TypeScript
 - Tailwind CSS 4 design system and responsive public shell
 - Accessible session-aware header, mobile navigation, footer, and homepage
-- Editorial Smart Tips visual identity (see Design system) and responsible-betting messaging
+- Editorial Winning Tips visual identity (see Design system) and responsible-betting messaging
 - Prisma ORM with PostgreSQL configuration
 - Foundational `Setting` model and idempotent seed framework
 - Zod environment validation
 - ESLint, Vitest, type-check, and production-build scripts
 - League, Team, and Fixture models with indexed external identifiers
-- A configurable `FootballProvider` contract and deterministic mock provider
+- A configurable `FootballProvider` contract with an API-Football adapter and a deterministic mock provider
 - Idempotent local fixture synchronization for past and upcoming dates
 - UTC-safe yesterday, today, and tomorrow fixture queries
 - A secret-protected `/api/cron/sync-fixtures` endpoint
@@ -100,12 +97,12 @@ Shared building blocks:
 
 `public/brand/` holds the artwork:
 
-- `smart-tips-mark.png` — the ball-and-arrow mark, cropped to its own edges
+- `winning-tips-mark.png` — the ball-and-arrow mark, cropped to its own edges
   (330x277) so it can be sized by height and fill its box. Used by
   `components/brand/wordmark.tsx` for the header, footer, auth and admin lockups.
-- `smart-tips-icon.png` — the mark on a **white** 512x512 square, cropped to the
+- `winning-tips-icon.png` — the mark on a **white** 512x512 square, cropped to the
   artwork. Copied to `app/icon.png` and `app/apple-icon.png` (which drive the
-  browser tab and home-screen icons) and to `smart-tips-logo.png` (the
+  browser tab and home-screen icons) and to `winning-tips-logo.png` (the
   schema.org organisation logo). These are deliberately opaque, not transparent:
   iOS composites a transparent apple-touch-icon onto black, and a solid tile
   reads on both light and dark browser chrome. It is legible from 32px up; at
@@ -180,7 +177,7 @@ The homepage build does not query the database, so it can be previewed before Po
 | Variable | Scope | Required | Purpose |
 | --- | --- | --- | --- |
 | `DATABASE_URL` | Server only | For database work | PostgreSQL connection string used by Prisma |
-| `NEXT_PUBLIC_APP_URL` | Public | Yes in deployment | Canonical application origin, for example `https://smart-tips.com` |
+| `NEXT_PUBLIC_APP_URL` | Public | Yes in deployment | Canonical application origin, for example `https://winning-tips.com` |
 | `GOOGLE_SITE_VERIFICATION` | Server | Optional | Google Search Console HTML-tag verification token |
 | `APP_ENV` | Server only | Optional | One of `development`, `test`, `staging`, or `production` |
 | `CRON_SECRET` | Server only | For fixture sync | Long random secret accepted as a Bearer token or `x-cron-secret` header |
@@ -195,7 +192,7 @@ Never commit `.env` files or expose `DATABASE_URL` to browser code.
 
 Import the GitHub repository into Vercel with the **Next.js** framework preset. Keep the default install and build commands and use Node.js 22, which is pinned in `package.json`.
 
-Add the variables listed above under **Project Settings → Environment Variables**. Production requires `DATABASE_URL`, `NEXT_PUBLIC_APP_URL=https://smart-tips.com`, `APP_ENV=production`, `CRON_SECRET`, and `PAYSTACK_SECRET_KEY` when live checkout is enabled. Use a pooled PostgreSQL URL for application traffic.
+Add the variables listed above under **Project Settings → Environment Variables**. Production requires `DATABASE_URL`, `NEXT_PUBLIC_APP_URL=https://winning-tips.com`, `APP_ENV=production`, `CRON_SECRET`, and `PAYSTACK_SECRET_KEY` when live checkout is enabled. Use a pooled PostgreSQL URL for application traffic.
 
 Apply database migrations separately with `npm run db:deploy` before promoting a deployment that introduces schema changes. `vercel.json` invokes fixture synchronization at 02:00 UTC and subscription/payment expiration at 03:00 UTC each day; Vercel automatically sends `CRON_SECRET` as its Bearer authorization value.
 
@@ -220,7 +217,7 @@ app/
   globals.css        Design tokens and global styles
   layout.tsx         Root metadata and document shell
 components/
-  brand/             The Smart Tips wordmark lockup
+  brand/             The Winning Tips wordmark lockup
   layout/            Header, desktop nav, mobile sheet, and footer
   ui/                Layout primitives, article shell, buttons, skeletons
 lib/
@@ -246,7 +243,29 @@ tests/               Automated tests
 
 ## Fixture synchronization
 
-The application uses the mock provider until a licensed football-data integration is configured. It never scrapes sports websites and public/admin reads always come from PostgreSQL.
+Fixtures and results come from a licensed feed selected by `FOOTBALL_PROVIDER`.
+The application never scrapes sports websites, and public/admin reads always come
+from PostgreSQL.
+
+| Provider | When to use |
+|---|---|
+| `api-football` | Any deployed environment. Needs `FOOTBALL_API_KEY` from [api-football.com](https://dashboard.api-football.com). Covers the Ghana Premier League and the NPFL alongside the major European competitions. |
+| `mock` | Local development only. A deterministic generated feed. |
+
+**The mock is refused outside development.** With `APP_ENV=production` or
+`APP_ENV=staging`, `/api/cron/sync-fixtures` returns 503 and writes nothing
+rather than filling the database with invented fixtures. A deployment missing its
+key fails loudly on the sync route instead of quietly publishing demo data.
+
+`FOOTBALL_LEAGUE_IDS` optionally narrows what is stored. Filtering happens after
+the response, so the allowlist costs no extra quota — one date is always one
+request, which matters on the free tier's 100 requests per day.
+
+Vendor payloads are normalised in `lib/football/api-football-provider.ts` and
+nowhere else; no API-Football field name or status code reaches the rest of the
+application. Contract tests in `tests/api-football-provider.test.ts` pin the
+response shape, so an upstream change fails the suite rather than silently
+syncing nothing.
 
 To apply migrations without granting the application role permission to create shadow databases, use:
 
@@ -261,33 +280,68 @@ Trigger the cron-compatible sync for yesterday plus three upcoming days:
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/sync-fixtures
 ```
 
-Pass `?days=7` to sync more upcoming days; the endpoint accepts between 1 and 14.
+Pass `?days=7` to sync more upcoming days; the endpoint accepts between 1 and 7.
 
-## VIP pricing and Paystack
+## Daily VIP cards and Paystack
 
-The seed creates editable launch defaults in Ghana cedis:
+VIP access is sold **one day at a time**. There are no subscriptions, durations or renewals.
 
-- VIP Day Pass: GHS 10 for one-day, Deck-specific access
-- VIP Weekly: GHS 20 for seven days of all-premium access
-- VIP Monthly: GHS 50 for 30 days of all-premium access
+Each day, for each country edition, each tier (VIP 1, VIP 2, VIP 3) has one **card**: a SportyBet booking code and its games. A member buys a card once and keeps access to that card permanently. The card carries its own price, currency, sales state and deadline, and checkout reads only the card.
 
-These are database values, not hardcoded storefront prices. Administrators can edit or deactivate them at `/admin/plans`.
+The daily admin flow:
 
-To enable hosted checkout, set `PAYSTACK_SECRET_KEY` and ensure `NEXT_PUBLIC_APP_URL` is the public HTTPS origin. Configure this webhook in the Paystack dashboard:
+1. `/admin/bookings` → **Load Slip**: choose the country edition and the tier, paste the SportyBet code. A slip with a leg on a sport we do not publish (virtual football, e-sports, table tennis) is refused.
+2. `/admin/games-control`: choose the edition, set the card's price, and open sales.
+3. Sales close automatically at the card's deadline, which is the first kick-off SportyBet reports. Checkout also refuses a card that is sold out, unpriced, in another currency, or already settling.
+
+`/admin/plans` is the tier catalogue. A tier's price is the default copied onto each new card in the same currency; an edition in another currency starts its card unpriced.
+
+To enable hosted checkout, set `PAYSTACK_SECRET_KEY` and make `NEXT_PUBLIC_APP_URL` the public HTTPS origin. Configure this webhook in the Paystack dashboard:
 
 ```text
 https://your-domain.example/api/payments/paystack/webhook
 ```
 
-The callback route verifies transactions again with Paystack before creating an entitlement. Configure a scheduled POST to expire old subscriptions and abandoned payments:
-
-```text
-POST /api/cron/expire-subscriptions
-Authorization: Bearer <CRON_SECRET>
-```
+Access is granted only after the payment is verified again directly with Paystack. A refund withdraws the card, because every unlock requires a successful payment. `/api/cron/expire-subscriptions` keeps its path for deployment compatibility; it now only cancels checkouts left pending for 24 hours.
 
 Use Paystack test keys and test payment methods before switching to a live secret. Do not place the secret key in any `NEXT_PUBLIC_` variable.
 
+## Country editions
+
+Editions are configuration in `lib/config/countries.ts`. Each carries its currency, timezone, minimum age, SportyBet site and whether it is live. Members choose their edition under Profile → Preferences; they see and buy only that edition's cards, priced in its currency. Ghana is live. Nigeria is configured and switched off: set `enabled` and `paymentsEnabled` to launch it, then load and price its cards from the admin screens.
+
+## Sports
+
+| Sport | Feed | Setting |
+|---|---|---|
+| Football | API-Football | `FOOTBALL_PROVIDER=api-football` + `FOOTBALL_API_KEY` |
+| Basketball | API-Basketball | `BASKETBALL_PROVIDER=api-basketball` (off by default). Uses `API_SPORTS_KEY`, or the football key |
+| Tennis | None | API-Sports does not cover tennis. Tennis legs loaded from SportyBet slips are published; a tennis feed needs its own vendor |
+
+Every league carries its sport, and every fixture inherits it, so the member screens filter and label each pick correctly. The nightly sync runs each configured sport independently: one sport's quota error never costs another's night.
+
+## Daily automation
+
+| UTC | Route | What it does |
+|---|---|---|
+| 02:00 | `/api/cron/sync-fixtures` | Fixtures and final scores for every configured sport |
+| 02:30 | `/api/cron/daily-automation` | Publishes scheduled picks, settles finished fixtures, posts the Telegram digest |
+| 03:00 | `/api/cron/expire-subscriptions` | Cancels abandoned checkouts |
+
+Every automation step records a run, visible at `/admin/automation` with its outcome or error. A crashed run stays marked as failed rather than disappearing.
+
+**Settlement grades only what a final score settles with certainty:** match result, double chance, draw no bet, totals, both teams to score, result-and-total combinations, and two-way winners. Anything else, including half-time, corners, cards, handicaps and player markets, is left pending and counted as needing review in `/admin/automation`; settle those in `/admin/results`. A grade is applied only to a pick that is still pending, so an admin's result is never overwritten, and each automatic grade writes an audit row naming the rule that decided it.
+
+The Telegram digest posts yesterday's settled results, losses included, and today's free card. It is skipped unless `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are both set.
+
+Run the automation by hand:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/daily-automation
+```
+
+Every schedule is daily, which fits Vercel's Hobby plan limit of one run per cron per day.
+
 ## Next stage
 
-Stage 5 adds score synchronisation, automatic and manual settlement, admin overrides, audit history, and historical result views. Password-reset tokens are already secure and single-use; delivery will be connected when transactional email is introduced in Stage 8.
+Remaining automation work: a tennis data vendor, odds snapshots and freshness, WhatsApp delivery, and per-member notification delivery. Password-reset tokens are already secure and single-use; delivery will be connected when transactional email is introduced.

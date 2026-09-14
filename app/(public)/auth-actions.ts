@@ -1,5 +1,6 @@
 "use server";
 
+import { safeDestination } from "@/lib/auth/destination";
 import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -12,13 +13,10 @@ import { createSession, revokeAllUserSessions } from "@/lib/auth/session";
 import { forgotPasswordSchema, loginSchema, profileSchema, registerSchema, resetPasswordSchema } from "@/lib/auth/validation";
 import { requireUser } from "@/lib/auth/authorization";
 import { isProtectedSuperAdminUsername } from "@/lib/auth/protected-admins";
+import { registrationConsents } from "@/lib/auth/consent";
+import { launchCountry } from "@/lib/config/countries";
 
 export type AuthActionState = { error?: string; success?: string };
-
-function safeDestination(value: FormDataEntryValue | null, fallback: string) {
-  const destination = typeof value === "string" ? value : fallback;
-  return destination.startsWith("/") && !destination.startsWith("//") ? destination : fallback;
-}
 
 export async function registerAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const parsed = registerSchema.safeParse(Object.fromEntries(formData));
@@ -44,6 +42,9 @@ export async function registerAction(_state: AuthActionState, formData: FormData
         displayName: parsed.data.username,
         phone: parsed.data.phone,
         role: "USER",
+        // Written in the same statement as the user, so an account can never
+        // exist without the record of what it agreed to.
+        consents: { create: registrationConsents(launchCountry.countryCode, launchCountry.minimumUserAge) },
       },
     });
   } catch (error) {
@@ -52,7 +53,7 @@ export async function registerAction(_state: AuthActionState, formData: FormData
   }
   await createSession(user.id);
   await recordAudit({ actorId: user.id, action: "USER_REGISTERED", entityType: "User", entityId: user.id });
-  redirect(safeDestination(formData.get("next"), "/dashboard"));
+  redirect(safeDestination(formData.get("next"), "/home"));
 }
 
 export async function loginAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
@@ -83,7 +84,7 @@ export async function loginAction(_state: AuthActionState, formData: FormData): 
   await database.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await createSession(user.id);
   await recordAudit({ actorId: user.id, action: "USER_LOGGED_IN", entityType: "Session" });
-  redirect(safeDestination(formData.get("next"), "/dashboard"));
+  redirect(safeDestination(formData.get("next"), "/home"));
 }
 
 export async function updateProfileAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
@@ -93,6 +94,8 @@ export async function updateProfileAction(_state: AuthActionState, formData: For
   await getDatabase().user.update({ where: { id: user.id }, data: parsed.data });
   await recordAudit({ actorId: user.id, action: "PROFILE_UPDATED", entityType: "User", entityId: user.id });
   revalidatePath("/account");
+  revalidatePath("/profile");
+  revalidatePath("/home");
   return { success: "Profile updated." };
 }
 

@@ -30,14 +30,17 @@ export async function getPublicBookingsByDate(date: string) {
   return (await getPublicBookingsByDates([date]))[date] ?? [];
 }
 
-const getCachedCurrentVipBookingsByDate = unstable_cache(async function getCachedCurrentVipBookingsByDate(date: string) {
+const getCachedCurrentVipBookingsByDate = unstable_cache(async function getCachedCurrentVipBookingsByDate(date: string, countryCode: string) {
   const { start, end } = getUtcDayRange(date);
   const bookings = await getDatabase().booking.findMany({
-    where: { bookingDate: { gte: start, lt: end }, category: { in: ["VIP1", "VIP2", "VIP3"] }, isActive: true },
+    where: { countryCode, bookingDate: { gte: start, lt: end }, category: { in: ["VIP1", "VIP2", "VIP3"] }, isActive: true },
     select: {
       id: true,
       category: true,
       priceMinor: true,
+      currency: true,
+      isSoldOut: true,
+      deadline: true,
       predictions: {
         where: { status: "PUBLISHED", visibility: "PREMIUM" },
         select: {
@@ -55,6 +58,9 @@ const getCachedCurrentVipBookingsByDate = unstable_cache(async function getCache
 
   return bookings.map((booking) => ({
     ...booking,
+    // Resolved here rather than during render: the buy screen only needs to
+    // know whether sales have closed, and checkout re-checks the real deadline.
+    salesClosed: booking.deadline !== null && booking.deadline.getTime() <= Date.now(),
     predictions: booking.predictions.map((prediction) => ({
       id: prediction.id,
       result: prediction.result,
@@ -63,9 +69,9 @@ const getCachedCurrentVipBookingsByDate = unstable_cache(async function getCache
       fixture: prediction.fixture,
     })),
   }));
-}, ["current-vip-bookings-v1"], { revalidate: 60, tags: [publicVipTag] });
+}, ["current-vip-bookings-v2"], { revalidate: 60, tags: [publicVipTag] });
 
-export async function getCurrentVipBookingsByDate(date: string) {
-  const bookings = await getCachedCurrentVipBookingsByDate(date);
+export async function getCurrentVipBookingsByDate(date: string, countryCode = "GH") {
+  const bookings = await getCachedCurrentVipBookingsByDate(date, countryCode);
   return new Map(bookings.map((booking) => [booking.category, booking]));
 }

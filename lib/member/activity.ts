@@ -1,5 +1,5 @@
 export const memberActivityLabels: Record<string, { title: string; description: string; tone: "emerald" | "blue" | "amber" | "slate" }> = {
-  USER_REGISTERED: { title: "Account created", description: "Your Smart Tips membership was created.", tone: "emerald" },
+  USER_REGISTERED: { title: "Account created", description: "Your Winning Tips membership was created.", tone: "emerald" },
   USER_LOGGED_IN: { title: "Signed in", description: "A successful login was recorded.", tone: "blue" },
   USER_LOGGED_OUT: { title: "Signed out", description: "Your session was securely closed.", tone: "slate" },
   PROFILE_UPDATED: { title: "Profile updated", description: "Your account details were changed.", tone: "blue" },

@@ -42,7 +42,7 @@ export default async function PaymentVerificationPage({
           </p>
         ) : null}
         <div className="mt-7 flex flex-wrap gap-3">
-          <Link href={success ? "/dashboard#my-vip-games" : "/vip"} className="btn btn-primary">
+          <Link href={success ? "/home#my-vip-games" : "/vip"} className="btn btn-primary">
             {success ? "View your games" : "Back to VIP slips"}
           </Link>
           <Link href={success ? "/account" : "/contact"} className="btn btn-ghost">

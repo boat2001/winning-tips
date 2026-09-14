@@ -8,7 +8,7 @@ import { getMemberActivity } from "@/lib/member/queries";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Activity",
-  description: "Review your Smart Tips account, payment and VIP activity.",
+  description: "Review your Winning Tips account, payment and VIP activity.",
   robots: { index: false, follow: false },
 };
 
@@ -24,7 +24,7 @@ export default async function ActivityPage() {
         lede="Sign-ins, profile changes, payments and VIP access, newest first."
       >
         <div className="flex flex-wrap gap-5 border-y border-line-2 py-4">
-          <Link href="/dashboard" className="eyebrow eyebrow-blue transition-colors hover:text-ink">
+          <Link href="/home" className="eyebrow eyebrow-blue transition-colors hover:text-ink">
             Dashboard →
           </Link>
           <Link href="/account" className="eyebrow eyebrow-blue transition-colors hover:text-ink">

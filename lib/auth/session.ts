@@ -69,7 +69,6 @@ export const getCurrentUser = cache(async function getCurrentUser() {
             phone: true,
             role: true,
             emailVerifiedAt: true,
-            premiumAccessUntil: true,
             isActive: true,
             lastLoginAt: true,
             createdAt: true,

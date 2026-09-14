@@ -26,7 +26,7 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   const adminEmail = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase();
   const adminPassword = process.env.SEED_ADMIN_PASSWORD;
-  const adminUsername = process.env.SEED_ADMIN_USERNAME?.trim().toLowerCase() || "smarttips-admin";
+  const adminUsername = process.env.SEED_ADMIN_USERNAME?.trim().toLowerCase() || "winningtips-admin";
   if (adminEmail && adminPassword) {
     if (adminPassword.length < 8) throw new Error("SEED_ADMIN_PASSWORD must be at least 8 characters.");
     const passwordHash = await bcrypt.hash(adminPassword, 12);
@@ -78,7 +78,7 @@ async function main() {
     create: {
       name: "Free Deck",
       slug: "free-deck",
-      description: "A daily selection available to every Smart Tips visitor.",
+      description: "A daily selection available to every Winning Tips visitor.",
       icon: "FD",
       visualIdentifier: "lime",
       sortOrder: 1,
@@ -119,18 +119,18 @@ async function main() {
 
   await prisma.plan.upsert({
     where: { slug: "vip-day-pass" },
-    update: { name: "VIP 1", description: "Access to carefully selected VIP 1 sports predictions.", currency: "GHS", durationDays: 1, scope: "DECK", deckId: vipDeck.id, sortOrder: 1 },
-    create: { name: "VIP 1", slug: "vip-day-pass", description: "Access to carefully selected VIP 1 sports predictions.", priceMinor: 0, currency: "GHS", durationDays: 1, scope: "DECK", deckId: vipDeck.id, sortOrder: 1 },
+    update: { name: "VIP 1", description: "Access to carefully selected VIP 1 sports predictions.", currency: "GHS", deckId: vipDeck.id, sortOrder: 1 },
+    create: { name: "VIP 1", slug: "vip-day-pass", description: "Access to carefully selected VIP 1 sports predictions.", priceMinor: 0, currency: "GHS", deckId: vipDeck.id, sortOrder: 1 },
   });
   await prisma.plan.upsert({
     where: { slug: "vip-weekly" },
-    update: { name: "VIP 2", description: "Access to higher-value VIP 2 sports predictions.", currency: "GHS", durationDays: 1, scope: "DECK", deckId: vipTwoDeck.id, sortOrder: 2 },
-    create: { name: "VIP 2", slug: "vip-weekly", description: "Access to higher-value VIP 2 sports predictions.", priceMinor: 0, currency: "GHS", durationDays: 1, scope: "DECK", deckId: vipTwoDeck.id, sortOrder: 2 },
+    update: { name: "VIP 2", description: "Access to higher-value VIP 2 sports predictions.", currency: "GHS", deckId: vipTwoDeck.id, sortOrder: 2 },
+    create: { name: "VIP 2", slug: "vip-weekly", description: "Access to higher-value VIP 2 sports predictions.", priceMinor: 0, currency: "GHS", deckId: vipTwoDeck.id, sortOrder: 2 },
   });
   await prisma.plan.upsert({
     where: { slug: "vip-monthly" },
-    update: { name: "VIP 3", description: "Access to our top-tier VIP 3 sports predictions.", currency: "GHS", durationDays: 1, scope: "DECK", deckId: vipThreeDeck.id, sortOrder: 3 },
-    create: { name: "VIP 3", slug: "vip-monthly", description: "Access to our top-tier VIP 3 sports predictions.", priceMinor: 0, currency: "GHS", durationDays: 1, scope: "DECK", deckId: vipThreeDeck.id, sortOrder: 3 },
+    update: { name: "VIP 3", description: "Access to our top-tier VIP 3 sports predictions.", currency: "GHS", deckId: vipThreeDeck.id, sortOrder: 3 },
+    create: { name: "VIP 3", slug: "vip-monthly", description: "Access to our top-tier VIP 3 sports predictions.", priceMinor: 0, currency: "GHS", deckId: vipThreeDeck.id, sortOrder: 3 },
   });
 
   if (!seedDemoData) {
@@ -319,7 +319,7 @@ async function main() {
           selection: selections[index % selections.length],
           odds: slip.odds[index] ?? "1.50",
           confidence: 72 + index * 3,
-          analysis: "Demo selection for reviewing the Smart Tips games-management and prediction interfaces.",
+          analysis: "Demo selection for reviewing the Winning Tips games-management and prediction interfaces.",
           visibility: slip.category === "FREE" ? "FREE" : "PREMIUM",
           status: "PUBLISHED",
           result: slip.results[index] ?? "PENDING",

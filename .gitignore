@@ -32,3 +32,11 @@
 *.tsbuildinfo
 
 .vercel
+
+# Visual-validation captures (guide 13.5). Review artefacts, not source.
+.screenshots/
+
+# Isolated redesign preview/build
+.next-review/
+.next-build/
+.next-preview/

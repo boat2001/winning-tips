@@ -4,7 +4,7 @@ import { PageMasthead, Shell } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Help Centre",
-  description: "Get help with Smart Tips predictions, accounts, booking codes and VIP slips.",
+  description: "Get help with Winning Tips predictions, accounts, booking codes and VIP slips.",
   alternates: { canonical: "/help" },
 };
 

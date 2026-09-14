@@ -1,16 +1,25 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Smart Tips design tokens
+   Winning Tips design tokens
 
-   The look is a matchday paper: warm newsprint ground, near-black ink, hairline
-   rules instead of drop shadows, and a single electric blue lifted from the
-   logo. Numbers (odds, kick-off times, booking codes) are always mono so a
-   column of them lines up like a results table.
+   TWO SYSTEMS LIVE HERE, on purpose and temporarily.
 
-   The palette is light throughout — there is no inverted variant of anything.
-   Depth comes from three grounds (paper, paper-2, surface) plus hairline rules,
-   never from a dark band.
+   1. STADIUM (current). The approved direction from the mocks in
+      design-reference/: deep stadium navy ground, electric green for
+      positive/action, royal blue for links and active state, and white cards
+      carrying the data. Sports intelligence, not a casino. Every value below is
+      sampled from the mocks rather than invented — see docs/design-decisions.md
+      for the sample table and method.
+
+   2. NEWSPRINT (legacy, retiring). The warm light newsprint system the VIP-slip
+      product still renders on. It stays until each of those routes is migrated,
+      because both prediction systems run side by side during the transition.
+      Do not build anything new on it.
+
+   Which one applies is decided by the shell a route sits in, not by a media
+   query: `.app-shell` opts into Stadium, `.public-content` / `.admin-content`
+   keep Newsprint.
 
    Everything below sits in @layer base or @layer components on purpose. Tailwind
    declares `@layer theme, base, components, utilities`, so a utility on the
@@ -19,6 +28,65 @@
    --------------------------------------------------------------------------- */
 
 @theme {
+  --breakpoint-xl: 75rem;
+  /* === STADIUM: grounds ===================================================
+     Five depths, darkest at the sidebar and lightest at the raised panel. The
+     mocks never use a shadow to separate two navy surfaces — the step in
+     lightness does that work, so keep the order intact when adding a surface. */
+  --color-navy-950: #00142e; /* sidebar, deepest ground */
+  --color-navy-900: #001938; /* page ground */
+  --color-navy-850: #001b42; /* top bar */
+  --color-navy-800: #00203e; /* raised panel, chart card */
+  --color-navy-700: #012b57; /* inactive pill, control ground */
+  --color-navy-600: #0d3364; /* hairline border on navy */
+
+  /* === STADIUM: brand ===================================================== */
+  --color-blue-600: #004eeb; /* active bottom-nav icon */
+  --color-blue-500: #0063fe; /* primary action, active filter */
+  --color-blue-400: #0097fe; /* Telegram card, link accent */
+  --color-blue-300: #74e6ff; /* eyebrow / kicker on navy */
+
+  --color-green-600: #00a02d;
+  --color-green-500: #00c437; /* odds pill, WON badge, toggle on */
+  --color-green-400: #3cf980; /* chart line, positive bars, glow */
+  --color-green-100: #ddfbe4; /* green chip ground on white */
+
+  --color-red-500: #f73549; /* LOST badge, negative bars */
+  --color-red-100: #fde2e5;
+
+  --color-gold-500: #ffc629; /* premium / featured only */
+  --color-gold-100: #fff3d1;
+
+  /* === STADIUM: text ======================================================
+     Two families: on-navy and on-card. Mixing them is the fastest way to make
+     a card look broken, so they are named for the ground they sit on. */
+  --color-on-navy: #ffffff;
+  --color-on-navy-2: #c7dcf2;
+  --color-on-navy-muted: #8aa6c8;
+
+  --color-card: #ffffff;
+  --color-card-2: #f4f8fd; /* tinted card, sport-icon tile */
+  --color-card-line: #e3ecf7;
+  --color-ink-900: #04142e; /* card headline */
+  --color-ink-700: #1d3557;
+  --color-ink-500: #4f6aa2; /* card meta, sampled from tip rows */
+  --color-ink-400: #7d93b8;
+
+  /* === STADIUM: shape ===================================================== */
+  --radius-card: 14px;
+  --radius-pill: 999px;
+  --radius-control: 10px;
+
+  /* Restrained, per guide §11: glow is decoration and must never sit under
+     data. Only the two shadows below are used on navy. */
+  --shadow-card: 0 2px 8px rgb(0 8 20 / 0.28);
+  --shadow-raised: 0 8px 24px rgb(0 8 20 / 0.35);
+  --shadow-glow-green: 0 0 24px rgb(60 249 128 / 0.25);
+
+  --font-brand: var(--font-poppins), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-script: var(--font-caveat), "Segoe Script", "Bradley Hand", cursive;
+
+  /* === NEWSPRINT (legacy, retiring) ====================================== */
   --color-ink: #101215;
   --color-ink-2: #3a4049;
   --color-muted: #6e7681;
@@ -51,9 +119,9 @@
   --color-telegram: #229ed9;
   --color-whatsapp: #25d366;
 
-  --font-display: var(--font-oswald), "Haettenschweiler", "Arial Narrow", sans-serif;
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --radius-sharp: 2px;
 }
@@ -156,9 +224,103 @@
     font-size: 1rem;
     line-height: 1.25;
   }
+
+  /* --- STADIUM shell ------------------------------------------------------
+     Everything inside .app-shell switches to the navy system. The shell owns
+     its own ground so a route group can opt in without the root layout
+     knowing which system a page belongs to. */
+  .app-shell {
+    background: var(--color-navy-900);
+    color: var(--color-on-navy);
+    font-family: var(--font-brand);
+    /* Native controls, scrollbars and form widgets follow the dark ground. */
+    color-scheme: dark;
+  }
+
+  /* Overscroll past the shell would otherwise reveal the legacy cream body.
+     Scoped with :has so the newsprint routes keep their own ground. */
+  body:has(.app-shell) {
+    background: var(--color-navy-900);
+  }
+
+  /* Sports-editorial headings: bold and tight, but not uppercase — the mocks
+     set every heading in sentence case ("Today's Top Picks", "Recent Results"). */
+  .app-shell h1,
+  .app-shell h2,
+  .app-shell h3 {
+    font-family: var(--font-brand);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  .app-shell h1 {
+    font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+  }
+
+  .app-shell h2 {
+    font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  }
+
+  .app-shell h3 {
+    font-size: 1.0625rem;
+  }
 }
 
 @layer components {
+  /* TYPE FLOOR — 11px.
+     Nothing in this stylesheet may set a font-size below it. Sizes of 7-10px
+     had accumulated across the mobile breakpoints, each one shrinking text to
+     make a row fit. That is a layout fix applied to the wrong property: it
+     costs legibility, fails a 200% zoom check, and is the main reason the UI
+     read as unfinished. If content does not fit at 11px, change the layout. */
+
+  /* === STADIUM ============================================================
+     Kept deliberately small. Anything with a variant, a state or a prop is a
+     React component in components/ui — per guide §11, an explicit variant
+     beats a chain of class overrides. What lives here is only what a utility
+     cannot express. */
+
+  /* Small tracked uppercase label above a heading: "WELCOME BACK", "COMMUNITY".
+     Cyan rather than green so it never competes with a positive-state chip. */
+  .kicker {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: var(--color-blue-300);
+  }
+
+  /* Odds, percentages, scores and counts. Tabular so a column of them lines up
+     and so a changing value never reflows the row it sits in. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Filter rows scroll sideways on narrow screens (guide §12). The scrollbar
+     itself is noise on a control strip, so it is hidden while the region stays
+     keyboard- and touch-scrollable. */
+  .rail {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Sticky bottom navigation must clear the iOS home indicator (guide §12). */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* === NEWSPRINT (legacy, retiring) ====================================== */
+
   /* Opt any element into the display face — used for headings that live outside
      a .public-content / .admin-content region, such as the wordmark. */
   .display-heading {
@@ -390,3 +552,377 @@
     animation: none;
   }
 }
+
+/* Responsive implementation of the approved stadium references. */
+
+  .skip-link { position: fixed; top: -80px; left: 16px; z-index: 100; background: white; color: #04142e; padding: 12px 20px; border-radius: 8px; }
+  .skip-link:focus { top: 12px; }
+  /* --- interior page header -------------------------------------------
+     Flat, quiet, and about a third the height of the photo hero it replaces on
+     Tips, Results, Community and Profile. The title sits on the page ground
+     rather than on a card: a header is not an object, and giving it a border
+     was part of what made every screen read as a stack of identical boxes. */
+  .page-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 20px; padding: 4px 2px 0; }
+  .page-header-title { min-width: 0; }
+  .app-shell .page-header h1 { font-size: clamp(1.5rem, 2.6vw, 2rem); line-height: 1.15; letter-spacing: -0.02em; }
+  .page-header-meta { margin-top: 4px; color: #8aa6c8; font-size: 14px; line-height: 1.4; }
+  /* min-width:0 lets a scrolling filter rail inside the controls shrink to the
+     header's width instead of forcing the header wider than the viewport. */
+  .page-header-controls { display: flex; min-width: 0; max-width: 100%; flex-wrap: wrap; align-items: center; gap: 10px; }
+  @media (max-width: 767px) { .page-header-controls { width: 100%; } }
+
+  .page-hero { position: relative; isolation: isolate; overflow: hidden; border: 1px solid #087ab5; border-radius: 14px; min-height: 176px; background: #00203e; }
+  .hero-pitch { z-index: -4; object-fit: cover; object-position: center 35%; }
+  .hero-scrim { position: absolute; inset: 0; z-index: -3; background: linear-gradient(95deg,rgba(0,20,46,.76),rgba(0,25,56,.25) 60%,rgba(0,25,56,.05)); }
+  .hero-ribbon { position: absolute; z-index: -2; bottom: -10%; right: -5%; width: 110%; height: 95%; object-fit: cover; opacity: .7; pointer-events: none; }
+  .hero-athletes { position: absolute; z-index: -1; right: 0; bottom: 0; height: 100%; width: 55%; object-fit: contain; object-position: right bottom; }
+  .hero-copy { position: relative; padding: 24px 24px 20px; max-width: 78%; }
+  .page-hero h1 { margin-top: 8px; font-weight: 800; font-size: clamp(2rem,4.2vw,3.5rem); line-height: 1.08; }
+  .hero-subtitle { margin-top: 8px; font-size: clamp(.875rem,1.6vw,1.25rem); color: #c7dcf2; line-height: 1.4; }
+  .hero-flourish { position: absolute; right: 24px; top: 10px; font-family: var(--font-script); font-size: clamp(1rem,2.3vw,2rem); line-height: .95; transform: rotate(-12deg); text-align: center; }
+  .flourish-line { display: block; height: 3px; margin-top: 9px; transform: skew(-40deg) rotate(-9deg); background: #3cf980; }
+  .hero-content { position: relative; padding: 0 24px 20px; }
+  .home-hero { min-height: 280px; }
+  .home-hero .hero-copy { max-width: 72%; padding-top: 25px; padding-bottom: 26px; }
+  /* Sized against the mock, where the stat row stops at ~46% of the hero and
+     the athlete cut-out carries the rest. At 65% the cards crowded the artwork
+     and read oversized. */
+  .home-hero .hero-content { max-width: 52%; }
+  .stat-note { display: block; margin-top: 10px; padding: 5px 3px; text-align: center; border-radius: 8px; background: #ddfbe4; color: #006a24; font-size:11px; line-height: 1.3; }
+  .sport-tile { display: flex; min-width: 0; min-height: 74px; gap: 8px; align-items: center; padding: 10px; border: 1px solid #125180; border-radius: 12px; background: linear-gradient(120deg,#00264b,#001a37); }
+  .sport-tile-active { border-color: #3cf980; background: #04351f; }
+  .sport-tile strong { display: block; font-size: 12px; }.sport-tile small { display: block; margin-top: 3px; color: #c7dcf2; font-size:11px; }
+  .settings-control { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid #e3ecf7; color: #04142e; }
+
+  /* Native controls sitting on a white card must not inherit the shell's dark
+     color-scheme — a checkbox rendered dark-on-light reads as a filled black
+     square, which is how the favourite-sport boxes came out. */
+  .app-shell .settings-control,
+  .app-shell .preference-form { color-scheme: light; }
+  .legacy-content { --color-paper: #001938; --color-paper-2: #00203e; --color-surface: #00264b; --color-ink: #fff; --color-ink-2: #c7dcf2; --color-muted: #a4bbd7; --color-line: #164475; --color-line-2: #164475; --color-blue: #74e6ff; --color-blue-pale: #002e57; --radius-sharp: 12px; color: #fff; font-family: var(--font-brand); }
+  .legacy-content h1,.legacy-content h2,.legacy-content h3,.legacy-content .display-heading { font-family: var(--font-brand); text-transform: none; line-height: 1.15; }
+  .legacy-content .eyebrow { font-family: var(--font-brand); letter-spacing: .08em; }
+  .legacy-content .btn { border-radius: 12px; font-family: var(--font-brand); text-transform: none; min-height: 44px; }
+  .legacy-content .btn-primary { background: #0063fe; color: white; }
+  .legacy-content input,.legacy-content textarea,.legacy-content select { background: #001938; color: white; border-color: #35628d; border-radius: 10px; }
+  .legacy-content .rule-double { height: 3px; border: 0; background: linear-gradient(90deg,#3cf980,transparent); }
+  .legacy-content .hero-plate { background-image: none; }
+  .profile-page .page-hero { min-height: 180px; }
+  .profile-page .hero-athletes { width: 40%; }
+  @media (min-width:768px) and (max-width:1199px) {
+    .home-hero .hero-content { max-width: 72%; }
+    /* Keep the meta beside the fixture rather than wrapping it to a full-width
+       second row. Wrapped, the kick-off sat bottom-left and the price
+       bottom-right with dead space between them, and every row grew to ~130px. */
+    /* A uniform height so a fixture whose names wrap to two lines does not
+       leave one card taller than its neighbours. Team names must wrap rather
+       than truncate (§12), so the list absorbs it instead. */
+  }
+  @media (max-width:767px) {
+    .page-hero { min-height: 145px; }
+    .hero-copy { padding: 18px 14px; max-width: 85%; }
+    .hero-content { padding: 0 12px 14px; }
+    .hero-flourish { right:12px; top:12px; font-size: 18px; }
+    .hero-subtitle { max-width: 34ch; font-size: 13px; }
+    .home-hero { min-height: 285px; }
+    .home-hero .hero-copy { padding: 26px 12px 54px; max-width: 90%; }
+    .home-hero h1 { font-size: clamp(1.45rem,6.2vw,2.5rem); }
+    .home-hero .hero-athletes { width: 63%; height: 78%; bottom: 64px; }
+    .home-hero .hero-content { max-width: none; }
+    .home-hero .hero-flourish { top: 54px; right: 8px; font-size: 15px; }
+    .hero-stats > li { padding: 10px 7px; }.hero-stats svg { width: 20px; height:20px; }
+    .stat-note { font-size:11px; min-height: 32px; }
+    .sport-tile { flex-direction: column; align-items: flex-start; padding: 10px; gap: 6px; }
+    .results-summary > li { flex-wrap:wrap; padding:10px; gap:7px; }
+    .results-summary svg { width:24px; height:24px; }
+    .results-summary p { overflow-wrap:anywhere; }
+    .results-summary p.text-xl { font-size:19px; }
+    .profile-page .hero-athletes { display:none; }
+    .profile-page .page-hero { min-height:135px; }
+    .settings-control { gap:10px; padding:12px; }
+  }
+  @media (max-width:359px) {
+    .hero-stats svg { display:none; }
+    .home-hero .hero-flourish { display:none; }
+    .settings-control { flex-wrap:wrap; }
+  }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *,*::before,*::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+.app-shell h2 { font-size:clamp(1.125rem,1.65vw,1.65rem); }
+.app-shell aside nav a { min-height:58px; }
+.app-shell aside nav a[aria-current="page"] { background:linear-gradient(90deg,#00364b,#00213b 80%,#007c38); box-shadow:inset 2px 0 #3cf980,inset -2px 0 9px #00c43788; }
+.profile-page .hero-athletes { right:16%; width:36%; height:170%; object-position:center top; bottom:-70%; }
+.hero-ribbon { object-fit:contain; height:auto; width:110%; bottom:-43%; opacity:.55; }
+.hero-flourish { right:24px; }
+.telegram-panel { display:grid; grid-template-columns:60px 1fr; column-gap:14px; row-gap:12px; min-height:150px; padding:20px; }
+.telegram-panel > svg { grid-row:1 / span 2; align-self:center; }
+.telegram-panel > a { grid-column:2; justify-self:start; }
+.telegram-panel > p { max-width:80px; font-size:18px; }
+.telegram-card h2 { font-size:clamp(1.125rem,1.7vw,1.5rem); }
+.profile-page .xl\:block > div { height:100%; max-height:190px; }
+.profile-page .xl\:block > div > div:last-child { padding-right:45%; }
+.profile-page .xl\:block img:not(:first-child) { position:absolute;right:0;bottom:0;height:160px; }
+@media (max-width:1199px) {
+}
+@media (max-width:767px) {
+  .page-hero .hero-content .rail { gap:8px; }
+  .page-hero .hero-content .rail a { font-size:11px; padding:10px 12px; min-height:44px; }
+  .home-hero .hero-copy {padding-bottom:65px;}
+  .home-hero .hero-copy .hero-subtitle {max-width:24ch; font-size:12px;}
+  .home-hero .hero-copy .kicker {font-size:11px;}
+  .home-hero .hero-athletes {width:52%;height:62%;bottom:96px;right:-16px;}
+  .home-hero .hero-scrim {background:linear-gradient(100deg,rgba(0,20,46,.94),rgba(0,20,46,.86) 46%,rgba(0,25,56,.42));}
+  .hero-flourish {font-size:16px;}
+  .sport-tile {min-height:80px;flex-direction:row;gap:5px;padding:8px 5px;}.sport-tile > span:first-child {width:25px;height:25px;padding:2px;}
+  .sport-tile strong {font-size:11px;}.sport-tile small {font-size:11px;}
+  .telegram-panel,.telegram-card {display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;min-height:100px;padding:13px;}
+  .telegram-card > svg {width:30px;height:30px;grid-column:1;grid-row:1;}
+  .telegram-card > div {grid-column:2;}
+  .telegram-card > a {grid-column:3;grid-row:1;font-size:11px;padding:8px 12px;min-height:38px;}
+  .telegram-card h2 {font-size:12px;line-height:1.25;}.telegram-card > div > p {font-size:11px;line-height:1.4;}
+  .community-tab {flex-direction:column;gap:7px;padding:12px 3px;}
+  .community-tab span {font-size:11px;}.community-tab svg {width:24px;height:24px;}
+  .community-count {padding:10px;}.community-count > div > p.text-xl {font-size:15px;}
+  .community-count > div > p.font-semibold {font-size:12px;}
+  .profile-page .hero-athletes {display:none;}
+}
+@media (max-width:359px) {
+  .telegram-card > a {grid-row:2;grid-column:2;justify-self:start;}
+}
+.landing-hero { position:relative;isolation:isolate;overflow:hidden;min-height:calc(100vh - 80px);max-height:1100px;background:#001938; }
+.landing-pitch {z-index:-5;object-fit:cover;}
+.landing-wash {position:absolute;inset:0;z-index:-4;background:linear-gradient(105deg,#001938bf 0%,#001e4799 49%,#006530bb 68%,#00422388);}
+.landing-ribbon {position:absolute;z-index:-2;inset:auto -30% -20% auto;width:115%;height:130%;object-fit:contain;transform:rotate(-22deg);}
+.landing-supporters {position:absolute;left:0;bottom:-5%;width:44%;height:40%;object-fit:contain;object-position:left bottom;opacity:.5;z-index:-3;}
+.landing-copy {position:relative;z-index:3;width:48%;max-width:680px;padding:48px 0 210px 5vw;}
+.landing-kicker {color:#3cf980;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;}
+.app-shell .landing-copy h1 {margin-top:16px;font-size:clamp(2.5rem,4.6vw,4.75rem);line-height:1.05;font-weight:800;letter-spacing:-.035em;}
+.landing-copy h1 span {color:#6eff3c;}
+.landing-lede {max-width:490px;margin-top:20px;color:#d4e4ff;font-size:clamp(.875rem,1.25vw,1.125rem);line-height:1.6;}
+.landing-actions {display:flex;gap:14px;flex-wrap:wrap;margin-top:26px;}
+.landing-join {display:flex;align-items:center;gap:12px;min-height:62px;padding:12px 20px;border-radius:14px;background:linear-gradient(105deg,#62ffa2,#64ff2c);color:#00142e;font-weight:700;font-size:15px;}
+.landing-join > svg:first-child {width:30px;height:30px;fill:#00142e;}.landing-join small {display:block;font-size:11px;letter-spacing:.08em;}.landing-join > svg:last-child {width:18px;}
+.landing-picks {display:flex;align-items:center;gap:8px;min-height:58px;padding:12px 18px;border:1px solid #b7d6fe;border-radius:14px;background:#00193888;font-size:14px;font-weight:600;}.landing-picks svg {width:18px;}
+.landing-trust {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:30px;max-width:530px;}
+.landing-trust > div {display:flex;gap:10px;align-items:center;font-size:12px;line-height:1.4;}.landing-trust svg {width:28px;height:28px;flex-shrink:0;color:#3cf980;}
+.landing-art {position:absolute;right:0;top:0;bottom:0;width:58%;pointer-events:none;}
+.landing-athletes {position:absolute;right:0;top:-6%;width:100%;height:70%;object-fit:contain;object-position:right top;}
+.landing-phone {position:absolute;z-index:2;bottom:-12%;right:27%;width:52%;transform:rotate(9deg);}.landing-phone img {width:100%;height:auto;filter:drop-shadow(0 12px 24px #0008);}
+.landing-phone figcaption {position:absolute;bottom:16%;left:10%;right:10%;border-radius:5px;background:#001938e8;color:white;padding:6px;font-size:11px;text-align:center;transform:rotate(-9deg);}
+.landing-balls {position:absolute;right:1%;bottom:2%;width:37%;height:auto;}
+.landing-float {position:absolute;right:3%;z-index:3;display:flex;align-items:center;gap:10px;padding:18px;background:#fff;color:#00142e;border-radius:14px;box-shadow:0 3px 20px #3cf98044;transform:rotate(-7deg);}
+.landing-float svg {width:32px;height:32px;color:#00c437;}.landing-float strong {display:block;font-size:18px;}.landing-float small {display:block;font-size:11px;color:#4f6aa2;}
+.landing-float-one {top:40%;}.landing-float-two {top:60%;}
+.landing-script,.landing-script-right {position:absolute;bottom:25px;left:4%;font:700 38px/.92 var(--font-script);transform:rotate(-12deg);z-index:4;}
+.landing-script span,.landing-script-right span {display:block;height:3px;background:#3cf980;margin-top:10px;transform:skew(-40deg);}
+.landing-script-right {top:30px;bottom:auto;left:auto;right:3%;font-size:30px;}
+@media(min-width:768px) and (max-width:1199px) {
+  .landing-hero {min-height:920px;}.landing-copy {width:57%;padding-left:4vw;padding-bottom:370px;}
+  .app-shell .landing-copy h1 {font-size:clamp(2.4rem,5vw,3.5rem);}
+  .landing-lede {max-width:340px;}.landing-art {width:67%;}
+  .landing-athletes {height:60%;top:11%;}.landing-phone {width:65%;right:23%;bottom:1%;}
+  .landing-float {padding:10px;right:1%;}.landing-float strong {font-size:14px;}.landing-float small {font-size:11px;}
+  .landing-float-one {top:65%;}.landing-float-two {top:77%;}.landing-balls {bottom:0;width:43%;}
+  .landing-script-right {top:45px;font-size:25px;}
+}
+@media(max-width:767px) {
+  /* Mobile stacks in flow: copy, then the composition, then the trust row.
+     These rules previously placed .landing-art absolutely *over* .landing-copy,
+     which ran the lede underneath an athlete photograph and pushed both float
+     cards off the right edge. Structural layout belongs in normal flow — §12
+     reserves absolute positioning for bounded decoration. */
+  .landing-hero {min-height:0;max-height:none;display:flex;flex-direction:column;}
+  .landing-copy {position:relative;width:100%;max-width:none;padding:24px 20px 0;}
+  .landing-kicker {font-size:11px;letter-spacing:.1em;}
+  .app-shell .landing-copy h1 {font-size:clamp(1.875rem,7.6vw,2.75rem);margin-top:10px;max-width:none;line-height:1.05;}
+  .landing-lede {max-width:none;margin-top:14px;font-size:14px;line-height:1.6;}
+  .landing-actions {flex-direction:column;align-items:stretch;gap:10px;margin-top:20px;max-width:none;}
+  .landing-join {font-size:14px;padding:12px 16px;min-height:56px;gap:10px;}
+  .landing-join > svg:first-child {width:26px;height:26px;}
+  .landing-join > svg:last-child {margin-left:auto;}
+  .landing-picks {font-size:14px;padding:12px 16px;min-height:52px;justify-content:center;}
+
+  /* The composition gets its own band, sized by ratio rather than a magic
+     pixel height, so it scales between 320 and 767px without re-tuning. */
+  .landing-art {position:relative;inset:auto;width:100%;height:auto;aspect-ratio:1 / 1.34;margin-top:26px;}
+  .landing-athletes {width:70%;height:44%;top:1%;right:-5%;object-position:right top;}
+  .landing-phone {width:50%;left:20%;right:auto;bottom:19%;transform:rotate(5deg);}
+  /* Caption sits below the device rather than across its screen, where it
+     covered the very preview it is describing. */
+  .landing-phone figcaption {position:static;transform:none;margin-top:8px;border-radius:8px;padding:5px 8px;font-size:11px;}
+  .landing-balls {width:52%;bottom:0;right:1%;z-index:1;}
+  .landing-float {padding:9px 11px;gap:8px;border-radius:12px;transform:rotate(-5deg);max-width:60%;}
+  .landing-float svg {width:22px;height:22px;}
+  .landing-float strong {font-size:12px;}
+  .landing-float small {font-size:11px;}
+  /* Kept in opposite corners so neither lands on the device. */
+  .landing-float-one {right:6px;left:auto;top:auto;bottom:12%;}
+  .landing-float-two {right:auto;left:6px;top:2%;bottom:auto;}
+
+  .landing-trust {position:static;margin:0;padding:22px 20px;gap:12px;max-width:none;background:#001938e8;border-top:1px solid #164475;}
+  .landing-trust > div {flex-direction:column;align-items:flex-start;font-size:11px;gap:8px;}
+  .landing-trust svg {width:24px;height:24px;}
+
+  .landing-script {top:auto;bottom:2%;left:14px;font-size:22px;}
+  .landing-script-right {top:96px;right:12px;font-size:17px;}
+  .landing-ribbon {width:170%;height:80%;bottom:0;right:-35%;transform:rotate(-35deg);opacity:.85;}
+  .landing-supporters {display:none;}
+}
+
+/* Final viewport tuning against the supplied phone and tablet compositions. */
+.fixture-notice { position:fixed; right:12px; top:72px; z-index:45; display:flex; align-items:center; gap:5px; border:1px solid #65dbff66; border-radius:999px; background:#001938e8; padding:5px 9px; color:#d8efff; font-size:11px; line-height:1; box-shadow:0 4px 16px #0005; backdrop-filter:blur(8px); }
+@media (min-width:1200px) { .fixture-notice { top:82px; } }
+/* On phones the badge overlapped the hero kicker; it sits clear of the content,
+   just above the bottom bar, where it still cannot be missed. */
+@media (max-width:767px) { .fixture-notice { top:auto; bottom:calc(64px + env(safe-area-inset-bottom, 0px)); right:10px; left:auto; } }
+@media (max-width:767px) {
+  .app-shell main { padding-left:10px; padding-right:10px; padding-top:10px; padding-bottom:78px; }
+  .home-page { gap:12px; }
+  .home-page .page-hero { border-radius:12px; }
+  .home-hero { min-height:228px; }
+  .home-hero .hero-copy { padding-top:18px; padding-bottom:42px; }
+  .home-hero .hero-athletes { height:72%; bottom:68px; }
+  .home-hero .hero-content { padding-bottom:10px; }
+  .hero-stats > li { padding:8px 7px; }
+  .stat-note { margin-top:6px; min-height:25px; padding:4px 2px; }
+  .home-page section.space-y-3 { row-gap:8px; }
+  .telegram-panel,.telegram-card { min-height:72px; padding:10px; }
+  .home-sports .sport-tile { min-height:64px; }
+  .home-page > section:last-of-type { padding:12px; }
+  .home-page > section:last-of-type > div.mt-4 { margin-top:10px; gap:12px; grid-template-columns:minmax(0,1fr); }
+  .home-page > section:last-of-type ul { padding:8px; gap:4px; }
+  .home-page > section:last-of-type ul p { font-size:11px; }
+  .home-page > section:last-of-type ul p.tabular { font-size:16px; }
+  .home-page > section:last-of-type > p { margin-top:7px; font-size:11px; }
+  .bottom-nav-link { min-height:58px; }
+  /* Four columns, matching design-reference/mobile/tips.png: sport tile,
+     fixture, market with its confidence chip beneath, and the price in its own
+     column at the right. The price previously stacked under the confidence
+     chip, which shrank it to 10px and buried the row's headline number. */
+  .featured-tip-card > div:last-child { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) 64px; gap:8px; padding:10px; }
+  .featured-tip-card > div:last-child > div:first-child { grid-column:1; grid-row:1; }
+  .featured-tip-card > div:last-child > div:first-child { min-width:0; flex-basis:auto; gap:7px; }
+  .featured-tip-card > div:last-child > div:first-child > span { width:36px; height:36px; padding:6px; }
+  .featured-tip-card > div:last-child > div:nth-child(2) { grid-column:2; grid-row:1; border:0; padding:0; }
+  .featured-tip-card > div:last-child > div:nth-child(2) { min-width:0; flex-basis:auto; }
+  .featured-tip-card > div:last-child > span { grid-column:1; grid-row:2; }
+  .featured-tip-card blockquote { grid-column:2 / -1; grid-row:2; margin:0; border-radius:9px; background:#f7fbff; padding:8px 10px; color:#082552; font-size:11px; }
+  .featured-tip-card > div:last-child > span:last-child { grid-column:3; grid-row:1; align-self:end; min-width:58px; padding:7px; font-size:14px; }
+  .featured-tip-card > div:last-child p { font-size:11px; }
+  .featured-tip-card > div:last-child p.font-bold { font-size:12px; }
+  .featured-tip-card > div:last-child time { font-size:11px; }
+  .featured-tip-card > div:first-child { padding:8px 10px; }
+  .preference-disclosure[open] > summary svg:last-child { transform:rotate(90deg); }
+  .performance-breakdown > li { min-width:0; padding:8px; }
+  .performance-breakdown > li > div { flex-direction:column; align-items:flex-start; gap:4px; }
+  .performance-breakdown > li span[aria-hidden],.performance-breakdown > li svg { width:26px; height:26px; }
+  .performance-breakdown > li p { font-size:11px; line-height:1.2; }
+  .performance-breakdown > li > p { margin-top:5px; }
+  .results-page section:nth-last-of-type(2) li:nth-child(n+5) { display:none; }
+}
+
+/* --- tip rows ---------------------------------------------------------------
+   Named grid areas, one class per child (see components/predictions/tip-row).
+   A breakpoint moves a named piece; nothing here selects "the second div". */
+.pick-row, .list-row-link { display:grid; align-items:center; column-gap:16px; row-gap:6px; padding:12px 14px; }
+.pick-row { grid-template-columns:auto minmax(0,1fr) auto auto auto auto; grid-template-areas:"icon main time conf odds go"; }
+.list-row { display:flex; align-items:center; padding-right:6px; }
+.list-row-link { flex:1; min-width:0; grid-template-columns:auto minmax(0,1.3fr) minmax(0,1fr) auto auto; grid-template-areas:"icon main pick conf odds"; }
+.pr-icon { grid-area:icon; } .pr-main { grid-area:main; } .pr-time { grid-area:time; } .pr-pick { grid-area:pick; }
+.pr-conf { grid-area:conf; } .pr-odds { grid-area:odds; justify-self:end; min-width:3.75rem; } .pr-go { grid-area:go; }
+.list-row .pr-pick { align-self:stretch; display:flex; flex-direction:column; justify-content:center; border-left:1px solid var(--color-card-line); padding-left:16px; }
+@media (max-width:767px) {
+  /* Phone: fixture and price on top, kick-off and confidence as a footer line.
+     The price stays top-right where the eye lands after the team names. */
+  .pick-row, .list-row-link { column-gap:10px; row-gap:10px; padding:12px; }
+  .pick-row { grid-template-columns:36px minmax(0,1fr) auto auto; grid-template-areas:"icon main main odds" ". time conf conf"; }
+  .pick-row .pr-go { display:none; }
+  .pr-icon { align-self:start; width:36px; height:36px; padding:6px; }
+  .pr-odds { align-self:start; }
+  .pr-conf { justify-self:end; }
+  .list-row { position:relative; padding-right:0; }
+  /* Pick, confidence and price share one line under a hairline, so a row is
+     three lines of text rather than five stacked blocks. */
+  .list-row-link { grid-template-columns:36px minmax(0,1fr) auto auto; grid-template-rows:auto 1px auto; grid-template-areas:"icon main main main" ". sep sep sep" ". pick conf odds"; }
+  .list-row-link::before { content:""; grid-area:sep; background:var(--color-card-line); }
+  .list-row .pr-conf { padding:6px 8px; }
+  .list-row .conf-word { display:none; }
+  /* The save control sits in the top-right corner; the fixture line leaves it room. */
+  .list-row .pr-main { padding-right:36px; }
+  .list-row-save { position:absolute; top:2px; right:2px; }
+  .list-row .pr-pick { border-left:0; padding-left:0; }
+}
+
+/* --- home layout ------------------------------------------------------------
+   Picks and the sport explorer side by side from xl, stacked below it. The old
+   grid kept an area for the Telegram card after the card was removed, which
+   left a hole the height of the pick list in the right column. */
+.home-grid { display:grid; gap:clamp(1.25rem,2.2vw,2rem); }
+@media (min-width:1200px) { .home-grid { grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); align-items:start; } }
+.home-sports-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+@media (min-width:1200px) { .home-sports-list { grid-template-columns:1fr; gap:10px; } .home-sports-list .sport-tile { min-height:68px; padding:12px 14px; } }
+
+/* --- profile preferences ---------------------------------------------------- */
+/* One grid for every row, so the icon, the label and the control line up
+   down the card instead of each row arranging itself. */
+.pref-row { display:grid; grid-template-columns:2.25rem minmax(6rem,1fr) auto; align-items:center; gap:8px 16px; padding:16px; color:var(--color-ink-900); }
+.pref-control { grid-column:3; display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
+.pref-select { min-height:44px; width:100%; max-width:11rem; border:1px solid var(--color-card-line); border-radius:10px; background:var(--color-card-2); padding:0 10px; font-size:14px; }
+
+.pref-chip { position:relative; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 14px 0 8px; border:1.5px solid var(--color-card-line); border-radius:999px; background:#fff; font-size:14px; font-weight:600; cursor:pointer; transition:border-color .15s, background-color .15s; }
+.pref-chip:hover { border-color:#b9cbe4; }
+.pref-chip-tick { display:none; color:var(--color-green-600); }
+.pref-chip:has(input:checked) { border-color:var(--color-green-500); background:var(--color-green-100); }
+.pref-chip:has(input:checked) .pref-chip-tick { display:block; }
+.pref-chip:has(input:focus-visible) { outline:2px solid var(--color-blue-500); outline-offset:2px; }
+.pref-switch { display:inline-flex; width:48px; height:28px; border-radius:999px; background:#c9d6e8; padding:3px; transition:background-color .15s; cursor:pointer; }
+.pref-switch::after { content:""; width:22px; height:22px; border-radius:999px; background:#fff; box-shadow:0 1px 3px rgb(0 0 0 / .25); transition:transform .15s; }
+.peer:checked + .pref-switch { background:var(--color-green-500); }
+.peer:checked + .pref-switch::after { transform:translateX(20px); }
+.peer:focus-visible + .pref-switch { outline:2px solid var(--color-blue-500); outline-offset:2px; }
+.preference-form fieldset:disabled .pref-row { opacity:.6; }
+@media (max-width:639px) {
+  /* The control drops under its label and lines up with it, rather than
+     being squeezed into a column beside it. */
+  .pref-row { grid-template-columns:2.25rem minmax(0,1fr); }
+  .pref-control { grid-column:2; justify-content:flex-start; }
+  .pref-select { max-width:none; }
+}
+
+/* --- community ----------------------------------------------------------------
+   Feed plus one rail from lg; one column below. The rail panels used to be two
+   separate grid columns of different heights beside a much taller feed, which
+   left ragged bottoms at desktop and two squeezed half-width cards on phones. */
+.community-grid { display:grid; gap:clamp(1.25rem,2.2vw,2rem); align-items:start; }
+@media (min-width:1024px) { .community-grid { grid-template-columns:minmax(0,1.8fr) minmax(0,1fr); } .community-rail { position:sticky; top:88px; } }
+.composer > summary::-webkit-details-marker { display:none; }
+.composer[open] > summary .rounded-pill.border { border-color:var(--color-blue-500); }
+.post-action { display:inline-flex; align-items:center; gap:6px; min-height:44px; min-width:44px; padding:0 10px; border-radius:10px; color:var(--color-ink-500); font-size:14px; font-weight:600; transition:background-color .15s, color .15s; }
+.post-action:hover { background:var(--color-card-2); color:var(--color-blue-600); }
+.post-action[aria-expanded="true"] { color:var(--color-blue-600); background:var(--color-card-2); }
+
+/* --- landing sections below the hero --------------------------------------- */
+.landing-band { padding-block:clamp(56px,8vw,104px); background:var(--color-navy-900); }
+.landing-band-alt { background:linear-gradient(180deg,#001633,#00142e); border-block:1px solid rgb(13 51 100 / .6); }
+.landing-container { width:100%; max-width:1200px; margin-inline:auto; padding-inline:clamp(16px,5vw,48px); }
+.app-shell .landing-h2 { margin-top:10px; font-size:clamp(1.625rem,3vw,2.375rem); line-height:1.15; font-weight:800; letter-spacing:-.02em; }
+.landing-link { display:inline-flex; align-items:center; gap:4px; min-height:44px; color:var(--color-blue-300); font-weight:600; font-size:15px; }
+.landing-link:hover { color:#fff; }
+.landing-step { border:1px solid rgb(13 51 100 / .9); border-radius:var(--radius-card); background:var(--color-navy-800); padding:22px; }
+.landing-step-number { display:inline-flex; width:32px; height:32px; align-items:center; justify-content:center; border-radius:999px; background:var(--color-green-400); color:var(--color-navy-950); font-weight:800; font-size:15px; }
+.landing-sport { display:flex; align-items:center; gap:14px; min-height:88px; padding:16px; border:1px solid #125180; border-radius:var(--radius-card); background:linear-gradient(120deg,#00264b,#001a37); transition:border-color .15s; }
+.landing-sport:hover { border-color:var(--color-green-400); }
+.landing-community { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:24px; padding:clamp(24px,4vw,40px); border-radius:18px; background:linear-gradient(115deg,#00bbef 0%,#0063fe 45%,#002760 100%); }
+.landing-channel { display:inline-flex; align-items:center; gap:8px; min-height:48px; padding:0 20px; border-radius:999px; background:#fff; color:var(--color-blue-600); font-weight:700; transition:transform .15s; }
+.landing-channel:hover { transform:translateY(-1px); }
+.landing-faq > summary { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:64px; padding-block:14px; font-weight:600; font-size:16px; cursor:pointer; list-style:none; }
+.landing-faq > summary::-webkit-details-marker { display:none; }
+
+/* --- vertical rhythm ----------------------------------------------------------
+   One gap between the sections of a screen, and one between a section heading
+   and its content. Both scale with the viewport: at 16px flat, a screen of
+   full-width cards reads as an unbroken column with nothing to separate one
+   idea from the next. Sections are the unit a reader scans, so they get the
+   larger space and the things inside a section stay tighter than the space
+   around it. */
+.page-stack { display:flex; flex-direction:column; gap:clamp(1.5rem,2.6vw,2.5rem); }
+.section-stack { display:flex; flex-direction:column; gap:clamp(0.875rem,1.1vw,1.125rem); }

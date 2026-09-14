@@ -1,7 +1,7 @@
 export const siteConfig = {
-  name: "Smart Tips",
-  shortName: "ST",
-  tagline: "Read the game. Win the cash.",
+  name: "Winning Tips",
+  shortName: "WT",
+  tagline: "Predict. Win. Together.",
   description:
     "Daily football predictions with the market, the selection and the reasoning shown in full. Free tips every day, VIP slips when you want them.",
   locale: "en_GH",
@@ -14,8 +14,8 @@ export const siteConfig = {
 } as const;
 
 export const communityLinks = {
-  telegram: "https://t.me/+fSf79FiGlz05NDg0",
-  whatsapp: "https://wa.me/message/NBBEVPL4RCPTJ1",
+  telegram: "https://t.me/+UfUsHOHnJKUxNjI0",
+  whatsapp: "https://whatsapp.com/channel/0029Vb8l5L72ER6qQyuq9i0p",
 } as const;
 
 export function getSiteUrl() {

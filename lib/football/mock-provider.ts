@@ -57,7 +57,7 @@ function createFixtures(date: string): FixtureInput[] {
     awayScore: settled ? awayScore : null,
     venue,
     provider: "mock",
-    providerData: { source: "Smart Tips development fixture set" },
+    providerData: { source: "Winning Tips development fixture set" },
   }));
 }
 

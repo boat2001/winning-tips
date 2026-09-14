@@ -13,7 +13,6 @@ const getCachedActiveVipPlans = unstable_cache(async function getCachedActiveVip
       description: true,
       priceMinor: true,
       currency: true,
-      durationDays: true,
       isSoldOut: true,
       deck: { select: { id: true, name: true, slug: true } },
     },
@@ -75,8 +74,8 @@ export async function getMemberVipPurchases(userId: string) {
     return {
       id: payment.id,
       bookingId: payment.bookingId,
-      planId: payment.plan.id,
-      planName: payment.plan.name,
+      planId: payment.plan?.id ?? null,
+      planName: payment.plan?.name ?? payment.booking?.title ?? "VIP card",
       amountMinor: payment.amountMinor,
       currency: payment.currency,
       purchasedAt,

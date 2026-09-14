@@ -1,38 +1,10 @@
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
-import { getSiteUrl, siteConfig } from "@/lib/config/site";
+import { AppShell } from "@/components/app/app-shell";
+import { MarketingHeader } from "@/components/app/marketing-header";
+import { getCurrentViewer } from "@/lib/app/current-viewer";
+import { SiteLinksFooter } from "@/components/app/site-links-footer";
 
-export default function PublicLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const siteUrl = getSiteUrl();
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": `${siteUrl}#organization`,
-        name: siteConfig.name,
-        url: siteUrl,
-        logo: new URL("/brand/smart-tips-logo.png", siteUrl),
-      },
-      {
-        "@type": "WebSite",
-        "@id": `${siteUrl}#website`,
-        name: siteConfig.name,
-        url: siteUrl,
-        description: siteConfig.description,
-        publisher: { "@id": `${siteUrl}#organization` },
-        inLanguage: "en-GH",
-      },
-    ],
-  };
-
-  return (
-    <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replaceAll("<", "\\u003c") }} />
-      <SiteHeader />
-      {/* The header is one row on phones and gains a dateline strip from md up. */}
-      <main className="public-content pt-16 md:pt-[6.25rem]">{children}</main>
-      <SiteFooter />
-    </>
-  );
+export default async function PublicLayout({children}:Readonly<{children:React.ReactNode}>) {
+  const viewer = await getCurrentViewer();
+  if (viewer.id !== "guest") return <AppShell viewer={viewer}><div className="legacy-content">{children}</div><SiteLinksFooter /></AppShell>;
+  return <div className="app-shell"><MarketingHeader /><main id="main-content" className="legacy-content min-h-[70vh]">{children}</main><SiteLinksFooter /></div>;
 }

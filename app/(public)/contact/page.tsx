@@ -4,7 +4,7 @@ import { communityLinks } from "@/lib/config/site";
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: "Contact the Smart Tips desk about your account, a prediction or a VIP slip.",
+  description: "Contact the Winning Tips desk about your account, a prediction or a VIP slip.",
   alternates: { canonical: "/contact" },
 };
 
@@ -14,7 +14,7 @@ export default function ContactPage() {
 
   const channels = [
     { title: "Telegram", detail: "Free channel, daily card and announcements", value: "Open channel", href: communityLinks.telegram },
-    { title: "WhatsApp", detail: "Fastest route for account and payment questions", value: "Start a chat", href: communityLinks.whatsapp },
+    { title: "WhatsApp", detail: "The same daily card, straight to your phone", value: "Open channel", href: communityLinks.whatsapp },
     { title: "Phone", detail: "Office hours, Accra time", value: phone || "Number coming soon", href: phone ? `tel:${phone.replace(/\s+/g, "")}` : undefined },
     { title: "Email", detail: "For anything that needs a paper trail", value: email || "Address coming soon", href: email ? `mailto:${email}` : undefined },
   ];

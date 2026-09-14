@@ -8,14 +8,14 @@ import { AuthLayout } from "@/components/auth/auth-layout";
 
 const initialState: AuthActionState = {};
 
-export function AccountPreview({ mode, next = "/dashboard" }: { mode: "login" | "register"; next?: string }) {
+export function AccountPreview({ mode, next = "/home" }: { mode: "login" | "register"; next?: string }) {
   const register = mode === "register";
   const [state, action, pending] = useActionState(register ? registerAction : loginAction, initialState);
 
   return (
     <AuthLayout
       kicker={register ? "New account" : "Members"}
-      title={register ? "Join Smart Tips" : "Sign back in"}
+      title={register ? "Join Winning Tips" : "Sign back in"}
       lede={
         register
           ? "Free to create. It keeps your VIP slips, booking codes and results in one place."
@@ -53,10 +53,17 @@ export function AccountPreview({ mode, next = "/dashboard" }: { mode: "login" | 
         {register && (
           <>
             <AuthField label="Confirm password" name="confirmPassword" required type="password" autoComplete="new-password" placeholder="Repeat your password" />
+            {/* Two acknowledgements, not one: confirming age and agreeing to
+                terms are different facts and are recorded separately (§14.2).
+                Neither is pre-checked. */}
+            <label className="flex min-w-0 items-start gap-3 text-sm leading-6 text-ink-2">
+              <input name="ageConfirmed" type="checkbox" required className="mt-1 size-4 shrink-0 accent-blue" />
+              <span className="min-w-0">I confirm I am 18 or older.</span>
+            </label>
             <label className="flex min-w-0 items-start gap-3 text-sm leading-6 text-ink-2">
               <input name="termsAccepted" type="checkbox" required className="mt-1 size-4 shrink-0 accent-blue" />
               <span className="min-w-0">
-                I am 18 or over and accept the{" "}
+                I agree to the{" "}
                 <Link href="/terms" className="font-semibold text-blue hover:underline">Terms of Service</Link> and{" "}
                 <Link href="/privacy" className="font-semibold text-blue hover:underline">Privacy Policy</Link>.
               </span>

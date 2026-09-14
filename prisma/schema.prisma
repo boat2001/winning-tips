@@ -22,6 +22,13 @@ model Setting {
   @@map("settings")
 }
 
+/** A league belongs to exactly one sport, and a fixture inherits it. */
+enum Sport {
+  FOOTBALL
+  BASKETBALL
+  TENNIS
+}
+
 enum FixtureStatus {
   SCHEDULED
   LIVE
@@ -59,11 +66,6 @@ enum UserRole {
   USER
 }
 
-enum PlanScope {
-  ALL_PREMIUM
-  DECK
-}
-
 enum PaymentProvider {
   PAYSTACK
 }
@@ -74,12 +76,6 @@ enum PaymentStatus {
   FAILED
   CANCELLED
   REFUNDED
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  EXPIRED
-  CANCELLED
 }
 
 enum SlipCategory {
@@ -95,6 +91,7 @@ model League {
   name       String
   slug       String    @unique
   country    String
+  sport      Sport     @default(FOOTBALL)
   logoUrl    String?
   fixtures   Fixture[]
   createdAt  DateTime  @default(now())
@@ -158,7 +155,6 @@ model Deck {
   sortOrder        Int            @default(0)
   predictions      Prediction[]
   plans            Plan[]
-  subscriptions    Subscription[]
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
@@ -188,6 +184,7 @@ model Prediction {
   booking     Booking?                @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   createdAt   DateTime                @default(now())
   updatedAt   DateTime                @updatedAt
+  saves       SavedTip[]
 
   @@index([fixtureId, status])
   @@index([deckId, status])
@@ -198,6 +195,12 @@ model Prediction {
 }
 
 model User {
+  consents           ConsentRecord[]
+  communityPosts CommunityPost[]
+  communityReactions CommunityReaction[]
+  communityReports CommunityReport[]
+  savedTips          SavedTip[]
+  preference         UserPreference?
   id                 String               @id @default(cuid())
   username           String               @unique
   email              String               @unique
@@ -206,7 +209,6 @@ model User {
   phone              String?
   role               UserRole             @default(USER)
   emailVerifiedAt    DateTime?
-  premiumAccessUntil DateTime?
   isActive           Boolean              @default(true)
   lastLoginAt        DateTime?
   predictions        Prediction[]
@@ -214,12 +216,10 @@ model User {
   passwordResets     PasswordResetToken[]
   auditLogs          AuditLog[]
   payments           Payment[]
-  subscriptions      Subscription[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 
   @@index([role, isActive])
-  @@index([premiumAccessUntil])
   @@map("users")
 }
 
@@ -230,15 +230,12 @@ model Plan {
   description   String
   priceMinor    Int            @default(0)
   currency      String         @default("GHS")
-  durationDays  Int
-  scope         PlanScope      @default(ALL_PREMIUM)
   deckId        String?
   isActive      Boolean        @default(true)
   isSoldOut     Boolean        @default(false)
   sortOrder     Int            @default(0)
   deck          Deck?          @relation(fields: [deckId], references: [id], onDelete: SetNull)
   payments      Payment[]
-  subscriptions Subscription[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -256,6 +253,10 @@ model Booking {
   shareUrl    String?
   totalOdds   Decimal?     @db.Decimal(12, 2)
   priceMinor  Int?
+  /** The country edition this card is sold in. A card is per country, per day, per tier. */
+  countryCode String       @default("GH")
+  currency    String       @default("GHS")
+  isSoldOut   Boolean      @default(false)
   deadline    DateTime?
   bookingDate DateTime     @db.Date
   isActive    Boolean      @default(true)
@@ -268,6 +269,7 @@ model Booking {
 
   @@index([bookingDate, isActive, sortOrder])
   @@index([category, bookingDate, isActive])
+  @@index([countryCode, category, bookingDate, isActive])
   @@index([deletedAt])
   @@map("bookings")
 }
@@ -278,7 +280,7 @@ model Payment {
   provider          PaymentProvider @default(PAYSTACK)
   providerReference String?
   userId            String
-  planId            String
+  planId            String?
   bookingId         String?
   amountMinor       Int
   currency          String
@@ -290,9 +292,8 @@ model Payment {
   paidAt            DateTime?
   verifiedAt        DateTime?
   user              User            @relation(fields: [userId], references: [id], onDelete: Restrict)
-  plan              Plan            @relation(fields: [planId], references: [id], onDelete: Restrict)
+  plan              Plan?           @relation(fields: [planId], references: [id], onDelete: Restrict)
   booking           Booking?        @relation(fields: [bookingId], references: [id], onDelete: Restrict)
-  subscription      Subscription?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
@@ -301,28 +302,6 @@ model Payment {
   @@index([status, createdAt])
   @@index([provider, providerReference])
   @@map("payments")
-}
-
-model Subscription {
-  id               String             @id @default(cuid())
-  userId           String
-  planId           String
-  paymentId        String             @unique
-  status           SubscriptionStatus @default(ACTIVE)
-  startsAt         DateTime
-  expiresAt        DateTime
-  grantsAllPremium Boolean            @default(true)
-  deckId           String?
-  user             User               @relation(fields: [userId], references: [id], onDelete: Restrict)
-  plan             Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
-  payment          Payment            @relation(fields: [paymentId], references: [id], onDelete: Restrict)
-  deck             Deck?              @relation(fields: [deckId], references: [id], onDelete: SetNull)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-
-  @@index([userId, status, expiresAt])
-  @@index([deckId, status, expiresAt])
-  @@map("subscriptions")
 }
 
 model Session {
@@ -382,4 +361,113 @@ model AuditLog {
   @@index([actorId, createdAt])
   @@index([entityType, entityId])
   @@map("audit_logs")
+}
+
+model SavedTip {
+  id           String     @id @default(cuid())
+  userId       String
+  predictionId String
+  selection    String?
+  market       String?
+  revisionAt   DateTime
+  createdAt    DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prediction   Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  @@unique([userId, predictionId])
+  @@index([userId, createdAt])
+  @@map("saved_tips")
+}
+
+model UserPreference {
+  userId        String   @id
+  countryCode   String   @default("GH")
+  sports        String[] @default([])
+  notifications Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("user_preferences")
+}
+
+model CommunityPost {
+  id        String @id @default(cuid())
+  authorId  String
+  parentId  String?
+  body      String
+  sport     String?
+  status    String @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent CommunityPost? @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies CommunityPost[] @relation("Replies")
+  reactions CommunityReaction[]
+  reports CommunityReport[]
+  @@index([status, parentId, createdAt])
+  @@map("community_posts")
+}
+model CommunityReaction {
+  userId String
+  postId String
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@id([userId, postId])
+  @@map("community_reactions")
+}
+model CommunityReport {
+  id String @id @default(cuid())
+  userId String
+  postId String
+  reason String
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@unique([userId, postId])
+  @@map("community_reports")
+}
+
+enum ConsentKind {
+  AGE_CONFIRMATION
+  TERMS
+  PRIVACY
+  MARKETING
+}
+
+/// Append-only: a withdrawal is a new row with granted = false, never an update.
+model ConsentRecord {
+  id          String      @id @default(cuid())
+  userId      String
+  kind        ConsentKind
+  granted     Boolean
+  version     String
+  countryCode String
+  source      String
+  createdAt   DateTime    @default(now())
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, createdAt])
+  @@map("consent_records")
+}
+
+enum AutomationStatus {
+  SUCCEEDED
+  PARTIAL
+  FAILED
+  SKIPPED
+}
+
+/// One run of a scheduled job: what it did, how it ended, and why.
+/// Written by every automation route, so a failed night is visible in admin
+/// instead of being discovered from a member's complaint.
+model AutomationRun {
+  id         String           @id @default(cuid())
+  job        String
+  status     AutomationStatus
+  startedAt  DateTime         @default(now())
+  finishedAt DateTime?
+  summary    Json?
+  error      String?
+
+  @@index([job, startedAt])
+  @@map("automation_runs")
 }

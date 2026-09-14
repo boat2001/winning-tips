@@ -11,8 +11,21 @@ export const registerSchema = z.object({
   phone: z.string().trim().min(7, "Enter a valid phone number.").max(30).regex(/^\+?[0-9 ()-]+$/, "Enter a valid phone number.").transform(normalizeInternationalPhone),
   password,
   confirmPassword: z.string(),
+  ageConfirmed: z.literal("on", { error: "Winning Tips is for adults. Confirm you are 18 or older to continue." }),
   termsAccepted: z.literal("on", { error: "You must agree to the Terms of Service and Privacy Policy." }),
 }).refine((data) => data.password === data.confirmPassword, { message: "Passwords do not match.", path: ["confirmPassword"] });
+
+/**
+ * The identity a member can change about themselves from the profile screen:
+ * the name shown on their card and the handle their posts carry.
+ *
+ * The handle reuses the registration rule, so a name that could never have
+ * been registered cannot be switched to later either.
+ */
+export const identitySchema = z.object({
+  displayName: z.string().trim().min(2, "Enter a name of at least 2 characters.").max(80),
+  username,
+});
 
 export const loginSchema = z.object({
   identifier: z.string().trim().toLowerCase().min(3).max(254),

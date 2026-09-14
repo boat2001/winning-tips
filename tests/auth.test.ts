@@ -6,7 +6,7 @@ import { isProtectedSuperAdminUsername } from "@/lib/auth/protected-admins";
 
 describe("authentication", () => {
   it("normalizes registration identity and enforces matching strong passwords", () => {
-    const result = registerSchema.parse({ username: "  Match_Fan  ", email: " FAN@EXAMPLE.COM ", phone: "+233 24 123 4567", password: "Strongpass1", confirmPassword: "Strongpass1", termsAccepted: "on" });
+    const result = registerSchema.parse({ username: "  Match_Fan  ", email: " FAN@EXAMPLE.COM ", phone: "+233 24 123 4567", password: "Strongpass1", confirmPassword: "Strongpass1", ageConfirmed: "on", termsAccepted: "on" });
     expect(result.username).toBe("match_fan");
     expect(result.email).toBe("fan@example.com");
     expect(() => registerSchema.parse({ ...result, phone: "" })).toThrow(/valid phone number/);

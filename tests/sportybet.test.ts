@@ -37,7 +37,7 @@ const successPayload = {
 };
 
 describe("SportyBet Ghana adapter", () => {
-  it("normalizes a real booking response into Smart Tips games", () => {
+  it("normalizes a real booking response into Winning Tips games", () => {
     const slip = parseSportyBetSlip(successPayload);
 
     expect(slip.shareURL).toBe("https://www.sportybet.com/gh/?shareCode=FSJ4DM");

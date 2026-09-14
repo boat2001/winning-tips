@@ -1,5 +1,10 @@
 "use server";
 
+import { sportFromName } from "@/lib/sports/sport";
+import { countries, type CountryCode } from "@/lib/config/countries";
+
+const countryCodes = Object.keys(countries) as [CountryCode, ...CountryCode[]];
+
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -15,6 +20,7 @@ import { invalidateBookingData, invalidateVipData } from "@/lib/cache/invalidate
 const loadSchema = z.object({
   code: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{4,20}$/),
   category: z.enum(["FREE", "VIP1", "VIP2", "VIP3"]),
+  countryCode: z.enum(countryCodes).default("GH"),
 });
 
 const deckSlugByCategory = { FREE: "free-deck", VIP1: "vip-deck", VIP2: "vip-2-deck", VIP3: "vip-3-deck" } as const;
@@ -52,22 +58,31 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
   try {
     const input = parsed.data;
     const bookingDate = getFixtureDateWindows()[1].date;
-    const loaded = await loadSportyBetSlip(input.code);
+    const country = countries[input.countryCode];
+    if (!country.enabled) return { error: `${country.name} is not live yet.` };
+    // A code only exists on the SportyBet site of the country it was made in.
+    const loaded = await loadSportyBetSlip(input.code, fetch, country.sportyBetRegion);
+    // Refuse the whole slip before writing anything if a leg is a sport we do
+    // not publish for, including virtual and e-sports variants (guide §2).
+    const unsupported = loaded.games.find((game) => sportFromName(game.sport) === null);
+    if (unsupported) return { error: `This slip includes ${unsupported.sport}, which Winning Tips does not publish predictions for.` };
     const database = getDatabase();
     const exists = await database.booking.findUnique({ where: { code: input.code }, select: { id: true } });
     if (exists) return { error: "That booking code has already been loaded." };
     const deck = await database.deck.findUnique({ where: { slug: deckSlugByCategory[input.category] }, select: { id: true } });
     if (!deck) return { error: `The ${labelByCategory[input.category]} deck is not configured.` };
-    const plan = input.category === "FREE" ? null : await database.plan.findFirst({ where: { deckId: deck.id, isActive: true }, select: { id: true, priceMinor: true } });
+    const plan = input.category === "FREE" ? null : await database.plan.findFirst({ where: { deckId: deck.id, isActive: true }, select: { id: true, priceMinor: true, isSoldOut: true, currency: true } });
     if (input.category !== "FREE" && !plan) return { error: `The ${labelByCategory[input.category]} plan is not configured.` };
-    const priceMinor = plan?.priceMinor || null;
+    // The tier default is only a price in its own currency. Another edition's
+    // card starts unpriced and is priced from games control.
+    const priceMinor = plan && plan.currency === country.currency ? plan.priceMinor || null : null;
 
     const totalOdds = loaded.totalOdds ?? loaded.games.reduce((total, game) => total * game.odd, 1);
     const bookingDateValue = new Date(`${bookingDate}T00:00:00.000Z`);
     const booking = await database.$transaction(async (transaction) => {
       if (input.category !== "FREE") {
         await transaction.booking.updateMany({
-          where: { category: input.category, bookingDate: bookingDateValue, isActive: true },
+          where: { countryCode: country.countryCode, category: input.category, bookingDate: bookingDateValue, isActive: true },
           data: { isActive: false },
         });
       }
@@ -77,9 +92,13 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
           platform: "SportyBet",
           code: input.code,
           category: input.category,
+          countryCode: country.countryCode,
+          currency: country.currency,
           shareUrl: loaded.shareURL || null,
           totalOdds: totalOdds.toFixed(2),
           priceMinor,
+          // A tier closed for sales stays closed when tomorrow's card loads.
+          isSoldOut: plan?.isSoldOut ?? false,
           deadline: new Date(loaded.deadline),
           bookingDate: bookingDateValue,
           isActive: true,
@@ -90,8 +109,8 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
         const leagueExternalId = game.sportybet.tournamentId;
         const league = await transaction.league.upsert({
           where: { externalId: leagueExternalId },
-          update: { name: game.tournament, country: game.category },
-          create: { externalId: leagueExternalId, name: game.tournament, slug: leagueExternalId, country: game.category },
+          update: { name: game.tournament, country: game.category, sport: sportFromName(game.sport) ?? "FOOTBALL" },
+          create: { externalId: leagueExternalId, name: game.tournament, slug: leagueExternalId, country: game.category, sport: sportFromName(game.sport) ?? "FOOTBALL" },
           select: { id: true },
         });
         const homeExternalId = stableId("sportybet-team", `${game.sport}:${game.home}`);
@@ -157,7 +176,7 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
       return { error: "The slip took too long to save. Nothing was partially loaded, so please try the same code again." };
     }
     if (isDatabaseError(error)) {
-      return { error: "Smart Tips could not save this slip. Please try again." };
+      return { error: "Winning Tips could not save this slip. Please try again." };
     }
     return { error: error instanceof Error ? error.message : "The booking code could not be loaded." };
   }
@@ -196,7 +215,9 @@ export async function updateVipControl(formData: FormData) {
     id: z.string().min(1),
     price: z.coerce.number().positive().max(100_000),
     availability: z.enum(["AVAILABLE", "SOLD_OUT"]),
+    countryCode: z.enum(countryCodes).default("GH"),
   }).parse(Object.fromEntries(formData));
+  const country = countries[parsed.countryCode];
   const priceMinor = Math.round(parsed.price * 100);
   const isSoldOut = parsed.availability === "SOLD_OUT";
   const database = getDatabase();
@@ -206,11 +227,17 @@ export async function updateVipControl(formData: FormData) {
   const category = existingPlan.deck?.slug ? categoryByDeckSlug[existingPlan.deck.slug as keyof typeof categoryByDeckSlug] : undefined;
   const today = getFixtureDateWindows()[1].date;
   const { start, end } = getUtcDayRange(today);
-  const currentSlip = category ? await database.booking.findFirst({ where: { category, bookingDate: { gte: start, lt: end }, isActive: true }, orderBy: { createdAt: "desc" }, select: { id: true } }) : null;
+  const currentSlip = category ? await database.booking.findFirst({ where: { countryCode: country.countryCode, category, bookingDate: { gte: start, lt: end }, isActive: true }, orderBy: { createdAt: "desc" }, select: { id: true } }) : null;
   if (!isSoldOut && !currentSlip) throw new Error("Load and publish today's VIP slip before marking it Available.");
   const plan = await database.$transaction(async (transaction) => {
-    const updated = await transaction.plan.update({ where: { id: parsed.id }, data: { isSoldOut, priceMinor }, select: { name: true } });
-    if (currentSlip) await transaction.booking.update({ where: { id: currentSlip.id }, data: { priceMinor } });
+    // The plan keeps the tier default for the next card; the card itself
+    // carries what checkout actually reads.
+    // Only a price in the plan's own currency is written back to it; another
+    // edition prices its card alone.
+    const updated = existingPlan.currency === country.currency
+      ? await transaction.plan.update({ where: { id: parsed.id }, data: { isSoldOut, priceMinor }, select: { name: true } })
+      : { name: existingPlan.name };
+    if (currentSlip) await transaction.booking.update({ where: { id: currentSlip.id }, data: { priceMinor, isSoldOut, currency: country.currency } });
     return updated;
   });
   await recordAudit({ actorId: actor.id, action: isSoldOut ? "VIP_MARKED_SOLD_OUT" : "VIP_MARKED_AVAILABLE", entityType: "Plan", entityId: parsed.id, metadata: { name: plan.name, priceMinor } });
@@ -221,5 +248,5 @@ export async function updateVipControl(formData: FormData) {
   revalidatePath("/admin/games");
   revalidatePath("/admin/games-control");
   revalidatePath("/admin/plans");
-  if (formData.get("appliedPlanId") === parsed.id) redirect(`/admin/games-control?applied=${parsed.id}`);
+  if (formData.get("appliedPlanId") === parsed.id) redirect(`/admin/games-control?applied=${parsed.id}&country=${country.countryCode}`);
 }

@@ -10,7 +10,7 @@ const globalForPrisma = globalThis as unknown as {
 // Bump this whenever a migration adds or removes Prisma models. During Next.js
 // hot reload, globalThis survives module reloads and can otherwise retain a
 // client generated from the previous schema.
-const prismaSchemaVersion = "20260830090000-pool-2";
+const prismaSchemaVersion = "20260907091000-community";
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;

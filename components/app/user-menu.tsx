@@ -1,0 +1,114 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { ChevronDown, Crown, LogOut, Settings, User as UserIcon } from "lucide-react";
+import { logoutAction } from "@/app/(public)/logout-action";
+import { Avatar } from "@/components/ui/avatar";
+import { type Viewer, planLabel } from "@/lib/domain/viewer";
+import { cn } from "@/lib/utils/cn";
+
+const MENU_ITEMS = [
+  { label: "Your profile", href: "/profile", icon: UserIcon },
+  { label: "Settings", href: "/profile#settings", icon: Settings },
+] as const;
+
+/**
+ * The account chip in the top bar, with its menu.
+ *
+ * Built by hand rather than with <details>, which cannot be dismissed with
+ * Escape and leaves the trigger without an `aria-expanded` state. The three
+ * behaviours a menu has to get right are all here: Escape closes and returns
+ * focus, a click outside closes, and the trigger describes its own state.
+ */
+export function UserMenu({ viewer }: { viewer: Viewer }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => setOpen((value) => !value)}
+        className="flex items-center gap-2.5 rounded-pill border border-navy-600 bg-navy-800/70 py-1.5 pl-1.5 pr-2.5 transition-colors hover:border-blue-400 sm:pr-3"
+      >
+        <Avatar name={viewer.displayName} src={viewer.avatarUrl} size="sm" />
+        <span className="hidden min-w-0 text-left sm:block">
+          <span className="block truncate text-[0.8125rem] font-semibold leading-tight text-on-navy">
+            {viewer.displayName}
+          </span>
+          <span className="flex items-center gap-1 text-[0.6875rem] leading-tight text-gold-500">
+            {viewer.plan === "PREMIUM" ? <Crown aria-hidden className="size-3 fill-gold-500" /> : null}
+            {planLabel(viewer.plan)}
+          </span>
+        </span>
+        <ChevronDown aria-hidden className={cn("size-4 text-on-navy-muted transition-transform", open && "rotate-180")} />
+      </button>
+
+      {open ? (
+        <div
+          role="menu"
+          aria-label="Account"
+          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-card border border-navy-600 bg-navy-850 py-1.5 shadow-raised"
+        >
+          <p className="border-b border-navy-600 px-4 pb-2.5 pt-1.5 text-xs text-on-navy-muted">
+            Signed in as <span className="font-semibold text-on-navy-2">{viewer.handle}</span>
+          </p>
+
+          {MENU_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              role="menuitem"
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-on-navy-2 transition-colors hover:bg-navy-800 hover:text-on-navy"
+            >
+              <item.icon aria-hidden className="size-4" />
+              {item.label}
+            </Link>
+          ))}
+
+          {/* Sign-out is a form action, not a link: it revokes the session
+              server-side and must not be triggerable by a prefetch or a
+              crawler. Reuses the existing action rather than a second path. */}
+          <form action={logoutAction} className="border-t border-navy-600">
+            <button
+              role="menuitem"
+              type="submit"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-on-navy-2 transition-colors hover:bg-navy-800 hover:text-on-navy"
+            >
+              <LogOut aria-hidden className="size-4" />
+              Log out
+            </button>
+          </form>
+        </div>
+      ) : null}
+    </div>
+  );
+}

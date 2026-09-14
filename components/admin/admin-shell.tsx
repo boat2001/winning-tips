@@ -10,9 +10,11 @@ const navigation = [
   ["Dashboard", "/admin", "dashboard"],
   ["Games Management", "/admin/games", "games"],
   ["VIP Games Control", "/admin/games-control", "controls"],
+  ["Automation", "/admin/automation", "controls"],
   ["Users", "/admin/users", "users"],
   ["Notifications", "/admin/notifications", "notifications"],
   ["SMS", "/admin/sms", "messages"],
+  ["Community", "/admin/community", "messages"],
   ["Settings", "/admin/settings", "settings"],
 ] as const;
 

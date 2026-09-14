@@ -2,8 +2,14 @@ import "server-only";
 
 import { z } from "zod";
 
-const SPORTYBET_API_BASE = "https://www.sportybet.com/api/gh";
-const SPORTYBET_PUBLIC_BASE = "https://www.sportybet.com/gh";
+/**
+ * SportyBet runs a separate site per country, and a booking code only exists on
+ * the site it was made on. The region picks the site; Ghana is the default so
+ * every existing caller keeps working unchanged.
+ */
+export type SportyBetRegion = "gh" | "ng";
+const apiBase = (region: SportyBetRegion) => `https://www.sportybet.com/api/${region}`;
+const publicBase = (region: SportyBetRegion) => `https://www.sportybet.com/${region}`;
 const SPORTYBET_SUCCESS_CODE = 10_000;
 const requestTimeoutMs = 20_000;
 
@@ -82,14 +88,14 @@ const slipSchema = z.object({
 export type LoadedSportyBetSlip = z.infer<typeof slipSchema>;
 type Fetcher = typeof fetch;
 
-function getShareUrl(code: string) {
-  return `${SPORTYBET_PUBLIC_BASE}/?shareCode=${encodeURIComponent(code)}`;
+function getShareUrl(code: string, region: SportyBetRegion) {
+  return `${publicBase(region)}/?shareCode=${encodeURIComponent(code)}`;
 }
 
-async function sportyBetRequest(path: string, init: RequestInit, fetcher: Fetcher) {
+async function sportyBetRequest(path: string, init: RequestInit, fetcher: Fetcher, region: SportyBetRegion) {
   let response: Response;
   try {
-    response = await fetcher(`${SPORTYBET_API_BASE}${path}`, {
+    response = await fetcher(`${apiBase(region)}${path}`, {
       ...init,
       cache: "no-store",
       signal: AbortSignal.timeout(requestTimeoutMs),
@@ -121,7 +127,7 @@ async function sportyBetRequest(path: string, init: RequestInit, fetcher: Fetche
   return parsed.data.data;
 }
 
-export function parseSportyBetSlip(payload: unknown): LoadedSportyBetSlip {
+export function parseSportyBetSlip(payload: unknown, region: SportyBetRegion = "gh"): LoadedSportyBetSlip {
   const parsed = sportyBetResponseSchema.safeParse(payload);
   if (!parsed.success) throw new Error("SportyBet returned an unsupported response format.");
   if (parsed.data.bizCode !== SPORTYBET_SUCCESS_CODE || !parsed.data.data) {
@@ -158,16 +164,16 @@ export function parseSportyBetSlip(payload: unknown): LoadedSportyBetSlip {
   return slipSchema.parse({
     deadline: new Date(data.deadline).toISOString(),
     shareCode: data.shareCode,
-    shareURL: getShareUrl(data.shareCode),
+    shareURL: getShareUrl(data.shareCode, region),
     totalOdds: data.ticket?.displayTotalOdds ? Number(data.ticket.displayTotalOdds) : undefined,
     games,
   });
 }
 
-export async function loadSportyBetSlip(code: string, fetcher: Fetcher = fetch): Promise<LoadedSportyBetSlip> {
+export async function loadSportyBetSlip(code: string, fetcher: Fetcher = fetch, region: SportyBetRegion = "gh"): Promise<LoadedSportyBetSlip> {
   const normalized = code.trim().toUpperCase();
   if (!/^[A-Z0-9]{4,20}$/.test(normalized)) throw new Error("Enter a valid SportyBet booking code.");
 
-  const response = await sportyBetRequest(`/orders/share/${encodeURIComponent(normalized)}`, { method: "GET" }, fetcher);
-  return parseSportyBetSlip({ bizCode: SPORTYBET_SUCCESS_CODE, data: response });
+  const response = await sportyBetRequest(`/orders/share/${encodeURIComponent(normalized)}`, { method: "GET" }, fetcher, region);
+  return parseSportyBetSlip({ bizCode: SPORTYBET_SUCCESS_CODE, data: response }, region);
 }

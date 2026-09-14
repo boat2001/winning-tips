@@ -9,11 +9,13 @@ import { getCurrentVipBookingsByDate } from "@/lib/bookings/queries";
 import { fromDateKey, getFixtureDateWindows, toDateKey } from "@/lib/football/dates";
 import { getVipHistoryByDate } from "@/lib/predictions/queries";
 import { getActiveVipPlans, getPurchasedBookingIds } from "@/lib/vip/queries";
+import { getMemberCountryCode } from "@/lib/app/preferences";
+import { resolveMemberCountry } from "@/lib/config/countries";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "VIP Slips",
-  description: "Buy a single Smart Tips VIP slip. No subscription, no auto-renewal, and the full archive is public.",
+  description: "Buy a single Winning Tips VIP slip. No subscription, no auto-renewal, and the full archive is public.",
   alternates: { canonical: "/vip" },
 };
 
@@ -22,11 +24,13 @@ export default async function VipPage({ searchParams }: { searchParams: Promise<
   const windows = getFixtureDateWindows();
   const historyDate = requestedDate ? toDateKey(requestedDate) : windows[0].date;
   const currentDate = windows[1].date;
-  const [plans, user, history, currentVipBookings] = await Promise.all([
+  const user = await getCurrentUser();
+  // The member's edition decides which day's cards they see and in what currency.
+  const country = resolveMemberCountry(user ? await getMemberCountryCode(user.id) : null);
+  const [plans, history, currentVipBookings] = await Promise.all([
     getActiveVipPlans(),
-    getCurrentUser(),
     getVipHistoryByDate(historyDate),
-    getCurrentVipBookingsByDate(currentDate),
+    getCurrentVipBookingsByDate(currentDate, country.countryCode),
   ]);
   const purchasedBookingIds = user ? await getPurchasedBookingIds(user.id) : [];
 
@@ -48,7 +52,7 @@ export default async function VipPage({ searchParams }: { searchParams: Promise<
               </span>
             </p>
             <div className="flex gap-5">
-              <Link href="/dashboard#my-vip-games" className="eyebrow eyebrow-blue transition-colors hover:text-ink">
+              <Link href="/home#my-vip-games" className="eyebrow eyebrow-blue transition-colors hover:text-ink">
                 Your games →
               </Link>
               <Link href="/activity" className="eyebrow eyebrow-blue transition-colors hover:text-ink">
@@ -76,7 +80,7 @@ export default async function VipPage({ searchParams }: { searchParams: Promise<
           <h2 className="display-heading text-xl font-semibold">Payment</h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-2">
             Checkout runs through Paystack, with card and mobile money offered where available. Access is granted
-            only after Smart Tips verifies the transaction directly with Paystack — we never see your card details.
+            only after Winning Tips verifies the transaction directly with Paystack — we never see your card details.
           </p>
         </div>
       </Shell>

@@ -26,7 +26,7 @@ const channels = [
  * The free-community buttons, shared by the homepage, the dashboard, the footer
  * and the mobile menu so the pair never drifts apart.
  *
- * The button itself stays inside the Smart Tips palette — white fill, hairline
+ * The button itself stays inside the Winning Tips palette — white fill, hairline
  * border, ink label — and only the glyph carries the platform's own colour. That
  * keeps them instantly recognisable without dropping two foreign brand slabs
  * into a page built on one blue.

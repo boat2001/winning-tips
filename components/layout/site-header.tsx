@@ -6,6 +6,7 @@ import { logoutAction } from "@/app/(public)/logout-action";
 import { adminRoles } from "@/lib/auth/constants";
 import { getCurrentUser } from "@/lib/auth/session";
 import { communityLinks, siteConfig } from "@/lib/config/site";
+import { getPredictionDayBoard } from "@/lib/predictions/queries";
 
 const publicNavigation: readonly NavItem[] = [
   { label: "Home", href: "/" },
@@ -29,21 +30,28 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 export async function SiteHeader() {
-  const user = await getCurrentUser();
+  const [user, predictionDays] = await Promise.all([
+    getCurrentUser(),
+    getPredictionDayBoard().catch(() => []),
+  ]);
   const isAdmin = Boolean(user && adminRoles.includes(user.role as (typeof adminRoles)[number]));
   const navigation = user ? memberNavigation : publicNavigation;
+  const today = predictionDays.find((day) => day.key === "today");
+  const freeToday = today?.predictions.filter((prediction) => prediction.visibility === "FREE").length ?? 0;
+  const vipToday = today?.predictions.filter((prediction) => prediction.visibility !== "FREE").length ?? 0;
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-surface">
-      {/* Dateline strip. A masthead needs a date on it; it also carries the
-          community links off the main row so the nav stays uncluttered. It sits
-          on the paper tint so it separates from the white nav row below without
-          resorting to a dark band. */}
+      {/* Live card counts sit beside the date while community links stay off the
+          main navigation row. */}
       <div className="hidden h-9 items-center border-b border-line bg-paper md:flex">
         <div className="mx-auto flex w-full max-w-[76rem] items-center justify-between px-5">
-          <p className="eyebrow">
-            {dateFormatter.format(new Date())} · Accra · {siteConfig.tagline}
-          </p>
+          <div className="flex items-center gap-5">
+            <p className="eyebrow">{dateFormatter.format(new Date())} · Accra</p>
+            <p className="eyebrow eyebrow-blue">
+              <span className="num">{vipToday}</span> VIP · <span className="num">{freeToday}</span> free today
+            </p>
+          </div>
           <div className="flex items-center gap-5">
             <a href={communityLinks.telegram} target="_blank" rel="noreferrer" className="eyebrow transition-colors hover:text-ink">
               Telegram

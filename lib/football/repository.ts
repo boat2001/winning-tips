@@ -40,8 +40,9 @@ export function createPrismaFixtureRepository(
           slug: input.slug,
           country: input.country,
           logoUrl: input.logoUrl,
+          sport: input.sport ?? "FOOTBALL",
         },
-        create: input,
+        create: { ...input, sport: input.sport ?? "FOOTBALL" },
         select: { id: true },
       });
     },
