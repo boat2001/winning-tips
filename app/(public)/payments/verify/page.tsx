@@ -17,7 +17,7 @@ export default async function PaymentVerificationPage({
   try {
     if (reference) result = await verifyAndFulfilPayment(reference);
   } catch {
-    result = { status: "failed" };
+    result = { status: "pending" };
   }
   const success = result.status === "success";
 
@@ -26,14 +26,16 @@ export default async function PaymentVerificationPage({
       <div className="max-w-xl">
         <div className={success ? "border-t-[3px] border-won" : "border-t-[3px] border-hold"} />
         <p className={`eyebrow pt-5 ${success ? "text-won" : "text-hold"}`}>
-          {success ? "Payment confirmed" : result.status === "cancelled" ? "Payment cancelled" : "Payment not confirmed"}
+          {success ? "Payment confirmed" : result.status === "pending" ? "Verification pending" : result.status === "refunded" ? "Payment refunded" : result.status === "cancelled" ? "Payment cancelled" : "Payment not confirmed"}
         </p>
         <h1 className="display-heading mt-3 text-[clamp(1.875rem,6vw,3rem)] font-bold leading-[0.95]">
-          {success ? "Your slip is unlocked" : "Nothing was unlocked"}
+          {success ? "Your slip is unlocked" : result.status === "pending" ? "We're checking your payment" : "Nothing was unlocked"}
         </h1>
         <p className="mt-4 text-base leading-7 text-ink-2">
           {success
             ? "The games and results on this VIP slip are waiting in your dashboard, and they stay there for good."
+            : result.status === "pending" ? "Your payment is still being checked. Please do not pay again. Retry verification shortly, or contact support with your reference."
+            : result.status === "refunded" ? "This payment was refunded and no longer unlocks the card."
             : "No VIP games were unlocked. If your account was charged, send us the reference below and we will sort it."}
         </p>
         {reference ? (
@@ -42,6 +44,7 @@ export default async function PaymentVerificationPage({
           </p>
         ) : null}
         <div className="mt-7 flex flex-wrap gap-3">
+          {result.status === "pending" && reference ? <a href={`/payments/verify?reference=${encodeURIComponent(reference)}`} className="btn btn-primary">Check payment again</a> : null}
           <Link href={success ? "/home#my-vip-games" : "/vip"} className="btn btn-primary">
             {success ? "View your games" : "Back to VIP slips"}
           </Link>

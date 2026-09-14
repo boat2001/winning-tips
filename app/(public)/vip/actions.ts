@@ -10,6 +10,7 @@ import { getFixtureDateWindows, getUtcDayRange } from "@/lib/football/dates";
 import { PaystackProvider } from "@/lib/payments/paystack";
 import { getMemberCountryCode } from "@/lib/app/preferences";
 import { resolveMemberCountry } from "@/lib/config/countries";
+import { priceWithinRange } from "@/lib/vip/pricing";
 import { getSiteUrl } from "@/lib/config/site";
 
 export type CheckoutState = { error?: string };
@@ -46,6 +47,7 @@ export async function initializeCheckoutAction(_state: CheckoutState, formData: 
   });
   // Everything that decides whether today's card can be sold lives on the card.
   if (!currentSlip?.predictions.length) return { error: "Today's card has not been published yet." };
+  if (formData.get("bookingId") !== currentSlip.id || Number(formData.get("priceMinor")) !== currentSlip.priceMinor) return { error: "This card or its price has changed. Refresh the page before buying." };
   const alreadyOwned = await database.payment.findFirst({ where: { userId: user.id, bookingId: currentSlip.id, status: "SUCCESS" }, select: { id: true } });
   if (alreadyOwned) return { error: "You already own this card. View it under Your games." };
   if (currentSlip.isSoldOut) return { error: "Today's card is closed for sales." };
@@ -56,11 +58,20 @@ export async function initializeCheckoutAction(_state: CheckoutState, formData: 
   const priceMinor = currentSlip.priceMinor ?? 0;
   const currency = currentSlip.currency;
   if (priceMinor <= 0 || currency !== country.currency) return { error: "Today's card is not priced yet." };
+  if (currency === "GHS" && !priceWithinRange(category, priceMinor)) return { error: "This card's price needs to be reviewed before sales can open." };
   const recent = await database.payment.count({ where: { userId: user.id, createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) } } });
   if (recent >= 5) return { error: "Too many checkout attempts. Please wait a few minutes." };
 
   const reference = `td_${Date.now().toString(36)}_${randomBytes(9).toString("hex")}`;
-  const payment = await database.payment.create({ data: { reference, userId: user.id, planId: plan.id, bookingId: currentSlip.id, amountMinor: priceMinor, currency } });
+  const reservation = await database.$transaction(async (transaction) => {
+    await transaction.$queryRaw`SELECT "id" FROM "users" WHERE "id" = ${user.id} FOR UPDATE`;
+    const existing = await transaction.payment.findFirst({ where: { userId: user.id, bookingId: currentSlip.id, OR: [{ status: "SUCCESS" }, { status: "PENDING", createdAt: { gte: new Date(Date.now() - 30 * 60 * 1000) } }] }, orderBy: { createdAt: "desc" } });
+    if (existing) return { existing, payment: null };
+    const payment = await transaction.payment.create({ data: { reference, userId: user.id, planId: plan.id, bookingId: currentSlip.id, amountMinor: priceMinor, currency } });
+    return { existing: null, payment };
+  });
+  if (reservation.existing) return { error: reservation.existing.status === "SUCCESS" ? "You already own this card. View it under Your games." : "A payment for this card is already pending. Check it in your payment history before trying again." };
+  const payment = reservation.payment;
   const appUrl = getSiteUrl();
   let authorizationUrl: string;
   try {

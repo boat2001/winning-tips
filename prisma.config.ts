@@ -14,6 +14,6 @@ export default defineConfig({
   datasource: {
     // A non-secret local fallback keeps generation and CI builds deterministic.
     // Runtime database access still validates DATABASE_URL before connecting.
-    url: process.env.DATABASE_URL ?? "postgresql://smarttips:smarttips@localhost:5432/smarttips",
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL || "postgresql://winningtips:winningtips@localhost:5432/winningtips",
   },
 });

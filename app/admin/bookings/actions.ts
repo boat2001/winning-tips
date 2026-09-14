@@ -14,8 +14,11 @@ import { requireAdmin, requireManagementAdmin } from "@/lib/auth/authorization";
 import { loadSportyBetSlip } from "@/lib/bookings/sportybet";
 import { getDatabase } from "@/lib/db/client";
 import { isDatabaseError } from "@/lib/db/errors";
-import { getFixtureDateWindows, getUtcDayRange } from "@/lib/football/dates";
+import { fromDateKey, getFixtureDateWindows, getUtcDayRange } from "@/lib/football/dates";
 import { invalidateBookingData, invalidateVipData } from "@/lib/cache/invalidate";
+import { getAutomaticVipPrice } from "@/lib/vip/automatic-pricing";
+import { priceWithinRange, vipPriceRanges } from "@/lib/vip/pricing";
+import { slipSchedule } from "@/lib/bookings/schedule";
 
 const loadSchema = z.object({
   code: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{4,20}$/),
@@ -57,7 +60,6 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
 
   try {
     const input = parsed.data;
-    const bookingDate = getFixtureDateWindows()[1].date;
     const country = countries[input.countryCode];
     if (!country.enabled) return { error: `${country.name} is not live yet.` };
     // A code only exists on the SportyBet site of the country it was made in.
@@ -66,6 +68,8 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
     // not publish for, including virtual and e-sports variants (guide §2).
     const unsupported = loaded.games.find((game) => sportFromName(game.sport) === null);
     if (unsupported) return { error: `This slip includes ${unsupported.sport}, which Winning Tips does not publish predictions for.` };
+    // Tomorrow's slips can be prepared today without appearing as today's card.
+    const { deadline, bookingDate } = slipSchedule(loaded.games.map((game) => game.kickoffAt), loaded.deadline);
     const database = getDatabase();
     const exists = await database.booking.findUnique({ where: { code: input.code }, select: { id: true } });
     if (exists) return { error: "That booking code has already been loaded." };
@@ -75,7 +79,8 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
     if (input.category !== "FREE" && !plan) return { error: `The ${labelByCategory[input.category]} plan is not configured.` };
     // The tier default is only a price in its own currency. Another edition's
     // card starts unpriced and is priced from games control.
-    const priceMinor = plan && plan.currency === country.currency ? plan.priceMinor || null : null;
+    const pricing = input.category !== "FREE" && country.currency === "GHS" ? await getAutomaticVipPrice(database, input.category, country.countryCode) : null;
+    const priceMinor = pricing?.priceMinor ?? null;
 
     const totalOdds = loaded.totalOdds ?? loaded.games.reduce((total, game) => total * game.odd, 1);
     const bookingDateValue = new Date(`${bookingDate}T00:00:00.000Z`);
@@ -98,8 +103,8 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
           totalOdds: totalOdds.toFixed(2),
           priceMinor,
           // A tier closed for sales stays closed when tomorrow's card loads.
-          isSoldOut: plan?.isSoldOut ?? false,
-          deadline: new Date(loaded.deadline),
+          isSoldOut: input.category !== "FREE",
+          deadline,
           bookingDate: bookingDateValue,
           isActive: true,
         },
@@ -122,9 +127,9 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
         const fixtureExternalId = game.sportybet.eventId;
         const kickoffAt = new Date(game.kickoffAt);
         const providerData = {
-          source: "SportyBet Ghana booking code",
+          source: `SportyBet ${country.name} booking code`,
           bookingCode: input.code,
-          country: "gh",
+          country: country.sportyBetRegion,
           sportId: game.sportybet.sportId,
           categoryId: game.sportybet.categoryId,
           tournamentId: game.sportybet.tournamentId,
@@ -148,6 +153,7 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
             bookingId: created.id,
             market: prediction.market,
             selection: prediction.selection,
+            sourceData: { marketId: game.sportybet.marketId, outcomeId: game.sportybet.outcomeId, specifier: game.sportybet.specifier ?? null },
             odds: game.odd.toFixed(2),
             confidence: 70,
             analysis: `Imported from SportyBet booking code ${input.code}. The admin can edit this selection and analysis before or after publication.`,
@@ -159,18 +165,15 @@ export async function loadBookingSlip(_state: SlipLoaderState, formData: FormDat
           },
         });
       }
-      if (plan) {
-        await transaction.plan.update({ where: { id: plan.id }, data: { isSoldOut: false } });
-      }
       return created;
     }, {
       maxWait: 10_000,
       timeout: 60_000,
     });
 
-    await recordAudit({ actorId: actor.id, action: "BOOKING_SLIP_LOADED", entityType: "Booking", entityId: booking.id, metadata: { code: input.code, category: input.category, games: loaded.games.length, totalOdds: totalOdds.toFixed(2), priceMinor } });
+    await recordAudit({ actorId: actor.id, action: "BOOKING_SLIP_LOADED", entityType: "Booking", entityId: booking.id, metadata: { code: input.code, category: input.category, games: loaded.games.length, totalOdds: totalOdds.toFixed(2), priceMinor, pricing, bookingDate } });
     refreshPublicContent();
-    return { success: `${labelByCategory[input.category]} loaded with ${loaded.games.length} matches.${input.category === "FREE" ? "" : " It is now available on the VIP plans."}` };
+    return { success: `${labelByCategory[input.category]} loaded for ${bookingDate} with ${loaded.games.length} matches.${input.category === "FREE" ? "" : ` Price: ${country.currency} ${((priceMinor ?? 0) / 100).toFixed(2)}. Open sales in Games Control after reviewing the card.`}` };
   } catch (error) {
     if (error instanceof Error && (error.message.includes("expired transaction") || error.message.includes("Transaction API error"))) {
       return { error: "The slip took too long to save. Nothing was partially loaded, so please try the same code again." };
@@ -216,6 +219,7 @@ export async function updateVipControl(formData: FormData) {
     price: z.coerce.number().positive().max(100_000),
     availability: z.enum(["AVAILABLE", "SOLD_OUT"]),
     countryCode: z.enum(countryCodes).default("GH"),
+    date: z.string().refine((value) => Boolean(fromDateKey(value)), "Choose a valid card date.").optional(),
   }).parse(Object.fromEntries(formData));
   const country = countries[parsed.countryCode];
   const priceMinor = Math.round(parsed.price * 100);
@@ -225,10 +229,15 @@ export async function updateVipControl(formData: FormData) {
   if (!existingPlan) throw new Error("VIP plan not found.");
   const categoryByDeckSlug = { "vip-deck": "VIP1", "vip-2-deck": "VIP2", "vip-3-deck": "VIP3" } as const;
   const category = existingPlan.deck?.slug ? categoryByDeckSlug[existingPlan.deck.slug as keyof typeof categoryByDeckSlug] : undefined;
-  const today = getFixtureDateWindows()[1].date;
+  if (category && country.currency === "GHS" && !priceWithinRange(category, priceMinor)) {
+    const range = vipPriceRanges[category];
+    throw new Error(`Price must be between GHS ${range.min / 100} and GHS ${range.max / 100}.`);
+  }
+  const today = parsed.date ?? getFixtureDateWindows()[1].date;
   const { start, end } = getUtcDayRange(today);
-  const currentSlip = category ? await database.booking.findFirst({ where: { countryCode: country.countryCode, category, bookingDate: { gte: start, lt: end }, isActive: true }, orderBy: { createdAt: "desc" }, select: { id: true } }) : null;
+  const currentSlip = category ? await database.booking.findFirst({ where: { countryCode: country.countryCode, category, bookingDate: { gte: start, lt: end }, isActive: true, deletedAt: null }, orderBy: { createdAt: "desc" }, select: { id: true, deadline: true } }) : null;
   if (!isSoldOut && !currentSlip) throw new Error("Load and publish today's VIP slip before marking it Available.");
+  if (!isSoldOut && (!currentSlip?.deadline || currentSlip.deadline <= new Date())) throw new Error("This card's sales deadline has passed.");
   const plan = await database.$transaction(async (transaction) => {
     // The plan keeps the tier default for the next card; the card itself
     // carries what checkout actually reads.
@@ -248,5 +257,5 @@ export async function updateVipControl(formData: FormData) {
   revalidatePath("/admin/games");
   revalidatePath("/admin/games-control");
   revalidatePath("/admin/plans");
-  if (formData.get("appliedPlanId") === parsed.id) redirect(`/admin/games-control?applied=${parsed.id}&country=${country.countryCode}`);
+  if (formData.get("appliedPlanId") === parsed.id) redirect(`/admin/games-control?applied=${parsed.id}&country=${country.countryCode}&date=${today}`);
 }

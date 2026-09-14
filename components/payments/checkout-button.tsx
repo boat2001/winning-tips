@@ -5,11 +5,15 @@ import { initializeCheckoutAction, type CheckoutState } from "@/app/(public)/vip
 
 export function CheckoutButton({
   planId,
+  bookingId,
+  priceMinor,
   configured,
   label = "Buy slip",
   className = "",
 }: {
   planId: string;
+  bookingId: string;
+  priceMinor: number;
   configured: boolean;
   label?: string;
   className?: string;
@@ -18,8 +22,10 @@ export function CheckoutButton({
   return (
     <form action={action} className={className} data-payments-configured={configured}>
       <input type="hidden" name="planId" value={planId} />
-      <button disabled={pending} className="btn btn-primary w-full">
-        {pending ? "Opening checkout…" : label}
+      <input type="hidden" name="bookingId" value={bookingId} />
+      <input type="hidden" name="priceMinor" value={priceMinor} />
+      <button disabled={pending || !configured} className="btn btn-primary w-full">
+        {pending ? "Opening checkout…" : !configured ? "Payments unavailable" : label}
       </button>
       {state.error && (
         <p role="alert" className="mt-3 text-sm font-medium text-lost">

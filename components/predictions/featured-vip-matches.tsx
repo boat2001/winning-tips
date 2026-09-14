@@ -177,7 +177,7 @@ export function FeaturedVipMatches({
                       Results published
                     </span>
                   ) : userSignedIn ? (
-                    <CheckoutButton planId={plan.id} configured={paymentsConfigured} label={`Buy · ${checkoutPrice}`} />
+                    <CheckoutButton planId={plan.id} bookingId={booking!.id} priceMinor={priceMinor} configured={paymentsConfigured} label={`Buy · ${checkoutPrice}`} />
                   ) : (
                     <Link href={`/login?next=${encodeURIComponent(loginNext)}`} className="btn btn-primary w-full">
                       Log in to buy · {checkoutPrice}

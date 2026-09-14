@@ -169,6 +169,7 @@ model Prediction {
   deckId      String?
   market      String
   selection   String
+  sourceData  Json?
   odds        Decimal                 @db.Decimal(6, 2)
   confidence  Int
   analysis    String

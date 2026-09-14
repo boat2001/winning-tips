@@ -1,62 +1,39 @@
 import type { ReactNode } from "react";
-import { siteConfig } from "@/lib/config/site";
-
-const points = [
-  "Every free pick shows its market, selection, odds and reasoning",
-  "Settled results stay published — wins and losses both",
-  "VIP slips are bought one at a time, never on subscription",
-] as const;
 
 /**
- * Auth screens are a split masthead: the brand argument on the paper tint to the
- * left, the form on white to the right. The two grounds are a shade apart rather
- * than inverted, so the split reads as one sheet folded, not two themes.
+ * Auth screens are one centred card: title, a line of context, the form, and a
+ * footer link to the neighbouring screen. Nothing competes with the form — the
+ * site header above already carries the brand.
  *
- * The panel carries no lockup of its own — the site header already sits directly
- * above it — and it is desktop-only, because everything in it is supporting
- * copy. On a phone that leaves the form starting at the top of the page.
+ * The card is centred in the viewport below the header (h-18 on mobile, h-20
+ * from lg), so short forms sit mid-screen and long ones simply scroll.
+ *
+ * This renders a <div>, not a <main>: the public layout already provides the
+ * page's main landmark.
  */
 export function AuthLayout({
-  kicker,
   title,
   lede,
   children,
   footer,
 }: {
-  kicker: string;
   title: string;
   lede: string;
   children: ReactNode;
   footer?: ReactNode;
 }) {
   return (
-    <div className="lg:grid lg:min-h-[calc(100vh-6.25rem)] lg:grid-cols-2">
-      <aside className="hidden flex-col justify-between bg-paper-2 px-12 py-14 lg:flex lg:border-r lg:border-line-2">
-        <div>
-          <p className="eyebrow eyebrow-blue">{siteConfig.tagline}</p>
-          <ul className="mt-6 space-y-4">
-            {points.map((point) => (
-              <li key={point} className="flex gap-3 border-t border-line-2 pt-4 text-sm leading-6 text-ink-2">
-                <span aria-hidden="true" className="mt-2.5 h-[3px] w-4 shrink-0 bg-blue" />
-                {point}
-              </li>
-            ))}
-          </ul>
+    <div className="flex min-h-[calc(100svh-4.5rem)] flex-col items-center justify-center px-4 py-10 sm:px-6 lg:min-h-[calc(100svh-5rem)] lg:py-14">
+      <div className="w-full max-w-md rounded-card border border-line-2 bg-surface p-6 shadow-lg sm:p-8">
+        <div className="text-center">
+          <h1 className="text-[clamp(1.625rem,5vw,2rem)] font-bold leading-tight">{title}</h1>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted">{lede}</p>
         </div>
+        {children}
+        {footer ? <div className="mt-6 border-t border-line-2 pt-5 text-center">{footer}</div> : null}
+      </div>
 
-        <p className="eyebrow mt-10">18+ only · Bet responsibly</p>
-      </aside>
-
-      <main className="bg-surface px-5 py-10 sm:px-8 lg:px-12 lg:py-14">
-        <div className="mx-auto w-full max-w-md">
-          <div className="rule-double" />
-          <p className="eyebrow eyebrow-blue pt-5">{kicker}</p>
-          <h1 className="display-heading mt-3 text-[clamp(1.875rem,6vw,2.5rem)] font-bold leading-[0.95]">{title}</h1>
-          <p className="mt-3 text-sm leading-6 text-muted">{lede}</p>
-          {children}
-          {footer ? <div className="mt-8 border-t border-line-2 pt-5">{footer}</div> : null}
-        </div>
-      </main>
+      <p className="mt-6 text-xs text-muted">18+ only · Bet responsibly</p>
     </div>
   );
 }

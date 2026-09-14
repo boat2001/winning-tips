@@ -14,8 +14,7 @@ export function AccountPreview({ mode, next = "/home" }: { mode: "login" | "regi
 
   return (
     <AuthLayout
-      kicker={register ? "New account" : "Members"}
-      title={register ? "Join Winning Tips" : "Sign back in"}
+      title={register ? "Join Winning Tips" : "Welcome back"}
       lede={
         register
           ? "Free to create. It keeps your VIP slips, booking codes and results in one place."
@@ -30,7 +29,7 @@ export function AccountPreview({ mode, next = "/home" }: { mode: "login" | "regi
         </p>
       }
     >
-      <form action={action} className="mt-8 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5">
+      <form action={action} className="mt-7 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5">
         <input type="hidden" name="next" value={next} />
         {register && <AuthField label="Username" name="username" required autoComplete="username" placeholder="Pick a username" />}
         <AuthField
@@ -77,18 +76,16 @@ export function AccountPreview({ mode, next = "/home" }: { mode: "login" | "regi
           </p>
         )}
 
+        {!register && (
+          <Link href="/forgot-password" className="-mt-2 justify-self-end text-sm font-semibold text-blue transition-colors hover:text-ink">
+            Forgot password?
+          </Link>
+        )}
+
         <button disabled={pending} className="btn btn-primary mt-1 w-full">
           {pending ? "Please wait…" : register ? "Create account" : "Sign in"}
         </button>
       </form>
-
-      {!register && (
-        <p className="mt-5">
-          <Link href="/forgot-password" className="eyebrow eyebrow-blue transition-colors hover:text-ink">
-            Forgot your password?
-          </Link>
-        </p>
-      )}
     </AuthLayout>
   );
 }

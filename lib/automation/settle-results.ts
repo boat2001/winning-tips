@@ -34,6 +34,7 @@ export async function settleFinishedPredictions(database: PrismaClient = getData
       id: true,
       market: true,
       selection: true,
+      sourceData: true,
       fixture: {
         select: {
           status: true,
@@ -61,7 +62,7 @@ export async function settleFinishedPredictions(database: PrismaClient = getData
       awayScore: fixture.awayScore,
       homeTeam: fixture.homeTeam.name,
       awayTeam: fixture.awayTeam.name,
-      specifier: specifierOf(fixture.providerData),
+      specifier: specifierOf(prediction.sourceData),
     });
 
     if (!decision) {

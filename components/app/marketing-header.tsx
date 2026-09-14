@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Menu, Search, X } from "lucide-react";
 import markImage from "@/public/brand/winning-tips-mark.png";
 import { ButtonLink } from "@/components/ui/button";
+import { cn } from "@/lib/utils/cn";
 
 const NAV = [
   { label: "Home", href: "/" },
@@ -15,9 +17,16 @@ const NAV = [
   { label: "About", href: "/about" },
 ] as const;
 
+function isActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+}
+
 /**
  * The guest header from the landing mock: a light bar above the navy hero,
  * which is the only place in the product where the brand sits on white.
+ *
+ * On desktop the bar is a three-column grid with equal outer tracks, so the nav
+ * sits on the true centre line whatever the width of the logo or the actions.
  *
  * The mobile menu is a disclosure rather than an overlay drawer — the mock shows
  * a plain hamburger, and a full drawer would need focus trapping and scroll
@@ -25,45 +34,51 @@ const NAV = [
  */
 export function MarketingHeader() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
-    <header className="relative z-30 bg-white">
-      <div className="mx-auto flex h-20 max-w-[84rem] items-center gap-2 px-4 sm:gap-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <Image src={markImage} alt="" priority className="h-9 w-auto sm:h-11" />
-          <span className="leading-none">
-            <span className="block font-brand text-base font-extrabold uppercase leading-[1.05] tracking-tight text-navy-950 sm:text-xl">
-              Winning
-              <br />
-              Tips
+    <header className="relative z-30 border-b border-navy-950/10 bg-white">
+      <div className="mx-auto flex h-18 max-w-[84rem] items-center gap-3 px-4 sm:px-6 lg:grid lg:h-20 lg:grid-cols-[1fr_auto_1fr] lg:gap-8 lg:px-8">
+        <Link href="/" className="flex shrink-0 items-center gap-3 justify-self-start">
+          <Image src={markImage} alt="" priority className="h-10 w-auto lg:h-12" />
+          <span className="flex flex-col">
+            <span className="whitespace-nowrap font-brand text-lg font-extrabold uppercase leading-none tracking-tight text-navy-950 lg:text-[1.375rem]">
+              Winning Tips
             </span>
-            <span className="mt-1 hidden text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-navy-800 min-[430px]:block">
+            <span className="mt-1.5 hidden whitespace-nowrap text-[0.625rem] font-bold uppercase leading-none tracking-[0.14em] text-navy-800 min-[430px]:block">
               Predict · Win · Together
             </span>
           </span>
         </Link>
 
-        <nav aria-label="Main" className="ml-8 hidden lg:block">
-          <ul className="flex items-center gap-7">
-            {NAV.map((item, index) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={index === 0 ? "page" : undefined}
-                  className={
-                    index === 0
-                      ? "border-b-2 border-blue-500 pb-1 font-semibold text-blue-600"
-                      : "font-medium text-navy-900 transition-colors hover:text-blue-600"
-                  }
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+        <nav aria-label="Main" className="hidden lg:block">
+          <ul className="flex items-center gap-1">
+            {NAV.map((item) => {
+              const active = isActive(pathname, item.href);
+              return (
+                <li key={item.href}>
+                  {/* The underline is absolutely positioned so the active link keeps
+                      the same box as the others and every label shares one baseline. */}
+                  <Link
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "relative flex h-10 items-center rounded-lg px-3.5 text-[0.9375rem] font-medium transition-colors",
+                      "after:absolute after:inset-x-3.5 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-blue-500 after:transition-opacity",
+                      active
+                        ? "text-blue-600 after:opacity-100"
+                        : "text-navy-900 after:opacity-0 hover:text-blue-600",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <div className="ml-auto flex items-center gap-2 justify-self-end sm:gap-3 lg:ml-0">
           <Link
             href="/tips"
             aria-label="Search tips"
@@ -72,21 +87,29 @@ export function MarketingHeader() {
             <Search aria-hidden className="size-5" />
           </Link>
 
+          <span aria-hidden className="hidden h-6 w-px bg-navy-950/10 lg:block" />
+
           {/* Wrapped rather than given `hidden` directly: ButtonLink's base class
               sets `inline-flex`, and cn() only concatenates — Tailwind's own
               utility order then decides which display wins, not the order the
               classes were written in. Hiding the wrapper is unambiguous. */}
           <span className="hidden sm:block">
+            {/* An inset ring draws inside the box, so Login matches Get Started's
+                height exactly instead of growing by the ring's width. */}
             <ButtonLink
               href="/login"
               variant="light"
-              className="!text-navy-900 ring-1 ring-navy-950/15 hover:!bg-navy-950/5"
+              className="h-11 !text-navy-900 ring-1 ring-inset ring-navy-950/15 hover:!bg-navy-950/5"
             >
               Login
             </ButtonLink>
           </span>
 
-          <ButtonLink href="/register" variant="success" className="whitespace-nowrap !px-3.5 !text-[0.8125rem] sm:!px-5 sm:!text-sm">
+          <ButtonLink
+            href="/register"
+            variant="success"
+            className="h-11 whitespace-nowrap !px-4 !text-[0.8125rem] sm:!px-5 sm:!text-sm"
+          >
             Get Started
           </ButtonLink>
 
@@ -106,17 +129,24 @@ export function MarketingHeader() {
       {open ? (
         <nav id="marketing-menu" aria-label="Main" className="border-t border-navy-950/10 lg:hidden">
           <ul className="mx-auto max-w-[84rem] px-4 py-2 sm:px-6">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className="block border-b border-navy-950/5 py-3 font-medium text-navy-900 last:border-b-0"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+            {NAV.map((item) => {
+              const active = isActive(pathname, item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "block border-b border-navy-950/5 py-3 font-medium last:border-b-0",
+                      active ? "text-blue-600" : "text-navy-900",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
             <li className="py-3 sm:hidden">
               <Link href="/login" className="font-semibold text-blue-600">
                 Login

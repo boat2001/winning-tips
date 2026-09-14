@@ -61,6 +61,7 @@ async function main() {
   // the deck slugs - but mock fixtures and sample predictions must never land in
   // a real database, so they only run with SEED_DEMO_DATA=true.
   const seedDemoData = process.env.SEED_DEMO_DATA === "true";
+  if (seedDemoData && process.env.APP_ENV !== "development") throw new Error("Demo seeding is restricted to development.");
 
   const windows = getFixtureDateWindows();
 
@@ -120,17 +121,17 @@ async function main() {
   await prisma.plan.upsert({
     where: { slug: "vip-day-pass" },
     update: { name: "VIP 1", description: "Access to carefully selected VIP 1 sports predictions.", currency: "GHS", deckId: vipDeck.id, sortOrder: 1 },
-    create: { name: "VIP 1", slug: "vip-day-pass", description: "Access to carefully selected VIP 1 sports predictions.", priceMinor: 0, currency: "GHS", deckId: vipDeck.id, sortOrder: 1 },
+    create: { name: "VIP 1", slug: "vip-day-pass", description: "Access to carefully selected VIP 1 sports predictions.", priceMinor: 4000, isSoldOut: true, currency: "GHS", deckId: vipDeck.id, sortOrder: 1 },
   });
   await prisma.plan.upsert({
     where: { slug: "vip-weekly" },
     update: { name: "VIP 2", description: "Access to higher-value VIP 2 sports predictions.", currency: "GHS", deckId: vipTwoDeck.id, sortOrder: 2 },
-    create: { name: "VIP 2", slug: "vip-weekly", description: "Access to higher-value VIP 2 sports predictions.", priceMinor: 0, currency: "GHS", deckId: vipTwoDeck.id, sortOrder: 2 },
+    create: { name: "VIP 2", slug: "vip-weekly", description: "Access to higher-value VIP 2 sports predictions.", priceMinor: 8000, isSoldOut: true, currency: "GHS", deckId: vipTwoDeck.id, sortOrder: 2 },
   });
   await prisma.plan.upsert({
     where: { slug: "vip-monthly" },
     update: { name: "VIP 3", description: "Access to our top-tier VIP 3 sports predictions.", currency: "GHS", deckId: vipThreeDeck.id, sortOrder: 3 },
-    create: { name: "VIP 3", slug: "vip-monthly", description: "Access to our top-tier VIP 3 sports predictions.", priceMinor: 0, currency: "GHS", deckId: vipThreeDeck.id, sortOrder: 3 },
+    create: { name: "VIP 3", slug: "vip-monthly", description: "Access to our top-tier VIP 3 sports predictions.", priceMinor: 17000, isSoldOut: true, currency: "GHS", deckId: vipThreeDeck.id, sortOrder: 3 },
   });
 
   if (!seedDemoData) {

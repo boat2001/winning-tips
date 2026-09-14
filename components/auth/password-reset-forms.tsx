@@ -19,13 +19,13 @@ export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState(forgotPasswordAction, {} as AuthActionState);
   return (
     <AuthLayout
-      kicker="Account recovery"
       title="Reset your password"
       lede="Enter the email address attached to your account and we'll send the next step."
       footer={backToLogin}
     >
       <form action={action} className="mt-8 grid gap-5">
         <AuthField label="Email address" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
+        {state.error && <p role="alert" className="text-sm text-lost">{state.error} <Link href="/contact" className="underline">Contact support</Link></p>}
         {state.success && (
           <p className="rounded-sharp border-l-[3px] border-won bg-won-bg px-3 py-2.5 text-sm font-medium text-won">{state.success}</p>
         )}
@@ -41,7 +41,6 @@ export function ResetPasswordForm({ token }: { token: string }) {
   const [state, action, pending] = useActionState(resetPasswordAction, {} as AuthActionState);
   return (
     <AuthLayout
-      kicker="Account recovery"
       title="Choose a new password"
       lede="At least eight characters, with an uppercase letter, a lowercase letter and a number."
       footer={backToLogin}

@@ -12,7 +12,7 @@ export type PublishSummary = { published: number };
  */
 export async function publishScheduledPredictions(database: PrismaClient = getDatabase(), now: Date = new Date()): Promise<PublishSummary> {
   const result = await database.prediction.updateMany({
-    where: { status: "SCHEDULED", publishAt: { lte: now } },
+    where: { status: "SCHEDULED", publishAt: { lte: now }, fixture: { kickoffAt: { gt: now }, status: "SCHEDULED", provider: { not: "mock" } }, OR: [{ bookingId: null }, { booking: { isActive: true, deletedAt: null } }] },
     data: { status: "PUBLISHED" },
   });
   return { published: result.count };

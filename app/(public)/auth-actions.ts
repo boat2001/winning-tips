@@ -15,6 +15,7 @@ import { requireUser } from "@/lib/auth/authorization";
 import { isProtectedSuperAdminUsername } from "@/lib/auth/protected-admins";
 import { registrationConsents } from "@/lib/auth/consent";
 import { launchCountry } from "@/lib/config/countries";
+import { passwordEmailConfigured, sendPasswordResetEmail } from "@/lib/messaging/password-email";
 
 export type AuthActionState = { error?: string; success?: string };
 
@@ -100,6 +101,7 @@ export async function updateProfileAction(_state: AuthActionState, formData: For
 }
 
 export async function forgotPasswordAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  if (!passwordEmailConfigured()) return { error: "Password recovery is temporarily unavailable. Please contact support." };
   const parsed = forgotPasswordSchema.safeParse(Object.fromEntries(formData));
   const generic = { success: "If that account exists, password-reset instructions will be sent." };
   if (!parsed.success) return generic;
@@ -110,7 +112,7 @@ export async function forgotPasswordAction(_state: AuthActionState, formData: Fo
     const recentRequests = await database.auditLog.count({ where: { action: "PASSWORD_RESET_REQUESTED", ipAddress: request.ipAddress, createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) } } });
     if (recentRequests >= 5) return generic;
   }
-  const user = await database.user.findUnique({ where: { email: parsed.data.email }, select: { id: true } });
+  const user = await database.user.findUnique({ where: { email: parsed.data.email }, select: { id: true, email: true } });
   if (!user) return generic;
 
   const token = randomBytes(32).toString("base64url");
@@ -124,8 +126,13 @@ export async function forgotPasswordAction(_state: AuthActionState, formData: Fo
   });
   await recordAudit({ actorId: user.id, action: "PASSWORD_RESET_REQUESTED", entityType: "User", entityId: user.id });
 
-  // Delivery is deliberately adapter-ready: connect an email provider in Stage 8.
-  // The raw token is never stored in the database or returned to the browser.
+  try {
+    await sendPasswordResetEmail(user.email, token);
+  } catch {
+    // Preserve the same response for known and unknown accounts. Operators can
+    // investigate delivery failure without storing the token or email payload.
+    await recordAudit({ actorId: user.id, action: "PASSWORD_RESET_DELIVERY_FAILED", entityType: "User", entityId: user.id });
+  }
   return generic;
 }
 
