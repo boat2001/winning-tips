@@ -10,12 +10,15 @@ import { getFixtureDateWindows, getUtcDayRange } from "@/lib/football/dates";
 import { PaystackProvider } from "@/lib/payments/paystack";
 import { getMemberCountryCode } from "@/lib/app/preferences";
 import { resolveMemberCountry } from "@/lib/config/countries";
+import { getSiteUrl } from "@/lib/config/site";
 
 export type CheckoutState = { error?: string };
 
 export async function initializeCheckoutAction(_state: CheckoutState, formData: FormData): Promise<CheckoutState> {
-  const user = await requireUser();
-  const planId = z.string().min(1).parse(formData.get("planId"));
+  const user = await requireUser("/vip");
+  const parsed = z.string().min(1).safeParse(formData.get("planId"));
+  if (!parsed.success) return { error: "Choose a VIP card to continue." };
+  const planId = parsed.data;
   if (!process.env.PAYSTACK_SECRET_KEY) return { error: "Online payment is not configured yet. Please contact support." };
   const database = getDatabase();
   const country = resolveMemberCountry(await getMemberCountryCode(user.id));
@@ -27,7 +30,7 @@ export async function initializeCheckoutAction(_state: CheckoutState, formData: 
   if (!category) return { error: "This VIP plan is currently unavailable." };
   const { start, end } = getUtcDayRange(getFixtureDateWindows()[1].date);
   const currentSlip = await database.booking.findFirst({
-    where: { countryCode: country.countryCode, category, bookingDate: { gte: start, lt: end }, isActive: true },
+    where: { countryCode: country.countryCode, category, bookingDate: { gte: start, lt: end }, isActive: true, deletedAt: null },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -37,14 +40,18 @@ export async function initializeCheckoutAction(_state: CheckoutState, formData: 
       deadline: true,
       predictions: {
         where: { status: "PUBLISHED", visibility: "PREMIUM" },
-        select: { result: true },
+        select: { result: true, fixture: { select: { kickoffAt: true, provider: true } } },
       },
     },
   });
   // Everything that decides whether today's card can be sold lives on the card.
   if (!currentSlip?.predictions.length) return { error: "Today's card has not been published yet." };
+  const alreadyOwned = await database.payment.findFirst({ where: { userId: user.id, bookingId: currentSlip.id, status: "SUCCESS" }, select: { id: true } });
+  if (alreadyOwned) return { error: "You already own this card. View it under Your games." };
   if (currentSlip.isSoldOut) return { error: "Today's card is closed for sales." };
-  if (currentSlip.deadline && currentSlip.deadline <= new Date()) return { error: "Sales for today's card closed at kick-off." };
+  const now = new Date();
+  if (!currentSlip.deadline || currentSlip.deadline <= now || currentSlip.predictions.some((prediction) => prediction.fixture.kickoffAt <= now)) return { error: "Sales for today's card are closed." };
+  if (currentSlip.predictions.some((prediction) => prediction.fixture.provider === "mock")) return { error: "This card is not available for purchase." };
   if (currentSlip.predictions.some((prediction) => prediction.result !== "PENDING")) return { error: "Today's card has already started settling." };
   const priceMinor = currentSlip.priceMinor ?? 0;
   const currency = currentSlip.currency;
@@ -54,7 +61,7 @@ export async function initializeCheckoutAction(_state: CheckoutState, formData: 
 
   const reference = `td_${Date.now().toString(36)}_${randomBytes(9).toString("hex")}`;
   const payment = await database.payment.create({ data: { reference, userId: user.id, planId: plan.id, bookingId: currentSlip.id, amountMinor: priceMinor, currency } });
-  const appUrl = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
+  const appUrl = getSiteUrl();
   let authorizationUrl: string;
   try {
     const initialized = await new PaystackProvider().initialize({ email: user.email, amountMinor: priceMinor, currency, reference, callbackUrl: new URL("/payments/verify", appUrl).toString(), metadata: { paymentId: payment.id, userId: user.id, planId: plan.id } });

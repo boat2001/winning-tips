@@ -18,8 +18,17 @@ export const communityLinks = {
   whatsapp: "https://whatsapp.com/channel/0029Vb8l5L72ER6qQyuq9i0p",
 } as const;
 
-export function getSiteUrl() {
-  return new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
+/**
+ * The canonical origin. A blank NEXT_PUBLIC_APP_URL counts as unset (a Vercel
+ * variable saved with no value arrives as ""), and on Vercel the project's
+ * production domain, then the deployment URL, stand in before localhost.
+ */
+export function getSiteUrl(environment: Record<string, string | undefined> = process.env) {
+  const configured = environment.NEXT_PUBLIC_APP_URL?.trim();
+  if (configured) return new URL(configured);
+  const vercelHost = environment.VERCEL_PROJECT_PRODUCTION_URL?.trim() || environment.VERCEL_URL?.trim();
+  if (vercelHost) return new URL(`https://${vercelHost}`);
+  return new URL("http://localhost:3000");
 }
 
 export type SiteConfig = typeof siteConfig;
