@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Winning Tips",
   shortName: "WT",
-  tagline: "Predict. Win. Together.",
+  tagline: "Get the tips. Win the cash.",
   description:
     "Daily football predictions with the market, the selection and the reasoning shown in full. Free tips every day, VIP slips when you want them.",
   locale: "en_GH",

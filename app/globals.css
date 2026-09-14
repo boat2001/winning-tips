@@ -688,12 +688,15 @@
 @media (max-width:359px) {
   .telegram-card > a {grid-row:2;grid-column:2;justify-self:start;}
 }
-.landing-hero { position:relative;isolation:isolate;overflow:hidden;min-height:calc(100vh - 80px);max-height:1100px;background:#001938; }
+/* The hero is as tall as its copy, not the viewport. It used to fill the
+   screen (up to 1100px), which pushed everything useful — the free codes
+   first of all — below the fold on every device. */
+.landing-hero { position:relative;isolation:isolate;overflow:hidden;background:#001938; }
 .landing-pitch {z-index:-5;object-fit:cover;}
 .landing-wash {position:absolute;inset:0;z-index:-4;background:linear-gradient(105deg,#001938bf 0%,#001e4799 49%,#006530bb 68%,#00422388);}
 .landing-ribbon {position:absolute;z-index:-2;inset:auto -30% -20% auto;width:115%;height:130%;object-fit:contain;transform:rotate(-22deg);}
 .landing-supporters {position:absolute;left:0;bottom:-5%;width:44%;height:40%;object-fit:contain;object-position:left bottom;opacity:.5;z-index:-3;}
-.landing-copy {position:relative;z-index:3;width:48%;max-width:680px;padding:48px 0 210px 5vw;}
+.landing-copy {position:relative;z-index:3;width:48%;max-width:680px;padding:clamp(40px,4.5vw,64px) 0 clamp(48px,5vw,72px) 5vw;}
 .landing-kicker {color:#3cf980;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;}
 .app-shell .landing-copy h1 {margin-top:16px;font-size:clamp(2.5rem,4.6vw,4.75rem);line-height:1.05;font-weight:800;letter-spacing:-.035em;}
 .landing-copy h1 span {color:#6eff3c;}
@@ -705,33 +708,55 @@
 .landing-trust {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:30px;max-width:530px;}
 .landing-trust > div {display:flex;gap:10px;align-items:center;font-size:12px;line-height:1.4;}.landing-trust svg {width:28px;height:28px;flex-shrink:0;color:#3cf980;}
 .landing-art {position:absolute;right:0;top:0;bottom:0;width:58%;pointer-events:none;}
-.landing-athletes {position:absolute;right:0;top:-6%;width:100%;height:70%;object-fit:contain;object-position:right top;}
-.landing-phone {position:absolute;z-index:2;bottom:-12%;right:27%;width:52%;transform:rotate(9deg);}.landing-phone img {width:100%;height:auto;filter:drop-shadow(0 12px 24px #0008);}
+.landing-athletes {position:absolute;right:0;top:0;width:100%;height:80%;object-fit:contain;object-position:right top;}
+.landing-phone {position:absolute;z-index:2;bottom:-20%;right:32%;width:38%;transform:rotate(9deg);}.landing-phone img {width:100%;height:auto;filter:drop-shadow(0 12px 24px #0008);}
 .landing-phone figcaption {position:absolute;bottom:16%;left:10%;right:10%;border-radius:5px;background:#001938e8;color:white;padding:6px;font-size:11px;text-align:center;transform:rotate(-9deg);}
-.landing-balls {position:absolute;right:1%;bottom:2%;width:37%;height:auto;}
+.landing-balls {position:absolute;right:1%;bottom:2%;width:26%;height:auto;}
+/* In a copy-height hero the crowd and its script caption land on the CTAs
+   and the trust row, so they are dropped rather than layered over text. */
+.landing-supporters,.landing-script {display:none;}
 .landing-float {position:absolute;right:3%;z-index:3;display:flex;align-items:center;gap:10px;padding:18px;background:#fff;color:#00142e;border-radius:14px;box-shadow:0 3px 20px #3cf98044;transform:rotate(-7deg);}
 .landing-float svg {width:32px;height:32px;color:#00c437;}.landing-float strong {display:block;font-size:18px;}.landing-float small {display:block;font-size:11px;color:#4f6aa2;}
 .landing-float-one {top:40%;}.landing-float-two {top:60%;}
 .landing-script,.landing-script-right {position:absolute;bottom:25px;left:4%;font:700 38px/.92 var(--font-script);transform:rotate(-12deg);z-index:4;}
 .landing-script span,.landing-script-right span {display:block;height:3px;background:#3cf980;margin-top:10px;transform:skew(-40deg);}
 .landing-script-right {top:30px;bottom:auto;left:auto;right:3%;font-size:30px;}
+/* Small desktops lose 240px to the sidebar; at 48% the two CTAs wrapped onto
+   two rows and added a line of height back to the hero. */
+@media(min-width:1200px) and (max-width:1439px) {
+  .landing-copy {width:52%;}
+  .landing-actions {flex-wrap:nowrap;}
+}
+/* Below the sidebar breakpoint there is no room for a composition beside the
+   copy, so the athletes become the background of the copy itself. Only the
+   photograph: the phone mock-up, the float cards and the balls are content-like
+   shapes that turn into noise behind text, so they are left out entirely. */
+@media(max-width:1199px) {
+  .landing-art {position:absolute;inset:0 0 0 auto;width:58%;height:auto;margin:0;aspect-ratio:auto;}
+  .landing-athletes {top:auto;bottom:0;right:0;width:100%;height:100%;object-position:right bottom;}
+  .landing-phone,.landing-float,.landing-balls {display:none;}
+}
 @media(min-width:768px) and (max-width:1199px) {
-  .landing-hero {min-height:920px;}.landing-copy {width:57%;padding-left:4vw;padding-bottom:370px;}
+  .landing-copy {width:60%;padding:48px 0 56px 4vw;}
+  /* Narrower than the phone backdrop: on a tablet the copy and the buttons
+     are wide enough to reach the photo, so the photo keeps to the right. */
+  .landing-art {width:42%;}
   .app-shell .landing-copy h1 {font-size:clamp(2.4rem,5vw,3.5rem);}
-  .landing-lede {max-width:340px;}.landing-art {width:67%;}
-  .landing-athletes {height:60%;top:11%;}.landing-phone {width:65%;right:23%;bottom:1%;}
-  .landing-float {padding:10px;right:1%;}.landing-float strong {font-size:14px;}.landing-float small {font-size:11px;}
-  .landing-float-one {top:65%;}.landing-float-two {top:77%;}.landing-balls {bottom:0;width:43%;}
-  .landing-script-right {top:45px;font-size:25px;}
+  .landing-lede {max-width:420px;}
+  .landing-trust {grid-template-columns:repeat(3,minmax(0,1fr));}
+  .landing-script-right {top:28px;font-size:22px;}
 }
 @media(max-width:767px) {
-  /* Mobile stacks in flow: copy, then the composition, then the trust row.
-     These rules previously placed .landing-art absolutely *over* .landing-copy,
-     which ran the lede underneath an athlete photograph and pushed both float
-     cards off the right edge. Structural layout belongs in normal flow — §12
-     reserves absolute positioning for bounded decoration. */
-  .landing-hero {min-height:0;max-height:none;display:flex;flex-direction:column;}
+  /* Phones: copy and trust row in flow, athletes as a faded backdrop behind
+     them. The composition used to follow the copy as its own ~520px band, which
+     doubled the hero's height and read as a separate section. The scrim is
+     heaviest on the left, where the lines of text start. */
+  .landing-hero {display:block;}
   .landing-copy {position:relative;width:100%;max-width:none;padding:24px 20px 0;}
+  .landing-art {width:80%;opacity:.42;}
+  .landing-athletes {height:62%;top:0;bottom:auto;object-position:right top;}
+  .landing-wash {background:linear-gradient(100deg,#001938f5 0%,#001938d9 45%,#0019388c 75%,#00422366 100%);}
+  .landing-script-right {display:none;}
   .landing-kicker {font-size:11px;letter-spacing:.1em;}
   .app-shell .landing-copy h1 {font-size:clamp(1.875rem,7.6vw,2.75rem);margin-top:10px;max-width:none;line-height:1.05;}
   .landing-lede {max-width:none;margin-top:14px;font-size:14px;line-height:1.6;}
@@ -739,33 +764,15 @@
   .landing-join {font-size:14px;padding:12px 16px;min-height:56px;gap:10px;}
   .landing-join > svg:first-child {width:26px;height:26px;}
   .landing-join > svg:last-child {margin-left:auto;}
-  .landing-picks {font-size:14px;padding:12px 16px;min-height:52px;justify-content:center;}
+  .landing-picks {font-size:14px;padding:12px 16px;min-height:50px;justify-content:center;}
 
-  /* The composition gets its own band, sized by ratio rather than a magic
-     pixel height, so it scales between 320 and 767px without re-tuning. */
-  .landing-art {position:relative;inset:auto;width:100%;height:auto;aspect-ratio:1 / 1.34;margin-top:26px;}
-  .landing-athletes {width:70%;height:44%;top:1%;right:-5%;object-position:right top;}
-  .landing-phone {width:50%;left:20%;right:auto;bottom:19%;transform:rotate(5deg);}
-  /* Caption sits below the device rather than across its screen, where it
-     covered the very preview it is describing. */
-  .landing-phone figcaption {position:static;transform:none;margin-top:8px;border-radius:8px;padding:5px 8px;font-size:11px;}
-  .landing-balls {width:52%;bottom:0;right:1%;z-index:1;}
-  .landing-float {padding:9px 11px;gap:8px;border-radius:12px;transform:rotate(-5deg);max-width:60%;}
-  .landing-float svg {width:22px;height:22px;}
-  .landing-float strong {font-size:12px;}
-  .landing-float small {font-size:11px;}
-  /* Kept in opposite corners so neither lands on the device. */
-  .landing-float-one {right:6px;left:auto;top:auto;bottom:12%;}
-  .landing-float-two {right:auto;left:6px;top:2%;bottom:auto;}
+  /* Full-bleed strip under the actions; the negative margin undoes the copy's
+     side padding so its tint reaches both edges. */
+  .landing-trust {position:relative;margin:24px -20px 0;padding:16px 20px;gap:12px;max-width:none;background:#001938cc;border-top:1px solid #164475;}
+  .landing-trust > div {flex-direction:column;align-items:flex-start;font-size:11px;gap:6px;}
+  .landing-trust svg {width:22px;height:22px;}
 
-  .landing-trust {position:static;margin:0;padding:22px 20px;gap:12px;max-width:none;background:#001938e8;border-top:1px solid #164475;}
-  .landing-trust > div {flex-direction:column;align-items:flex-start;font-size:11px;gap:8px;}
-  .landing-trust svg {width:24px;height:24px;}
-
-  .landing-script {top:auto;bottom:2%;left:14px;font-size:22px;}
-  .landing-script-right {top:96px;right:12px;font-size:17px;}
-  .landing-ribbon {width:170%;height:80%;bottom:0;right:-35%;transform:rotate(-35deg);opacity:.85;}
-  .landing-supporters {display:none;}
+  .landing-ribbon {width:170%;height:80%;bottom:0;right:-35%;transform:rotate(-35deg);opacity:.6;}
 }
 
 /* Final viewport tuning against the supplied phone and tablet compositions. */
@@ -775,7 +782,10 @@
    just above the bottom bar, where it still cannot be missed. */
 @media (max-width:767px) { .fixture-notice { top:auto; bottom:calc(64px + env(safe-area-inset-bottom, 0px)); right:10px; left:auto; } }
 @media (max-width:767px) {
-  .app-shell main { padding-left:10px; padding-right:10px; padding-top:10px; padding-bottom:78px; }
+  /* Scoped to the padded content column. As a bare `main` selector it also
+     inset the full-bleed pages, which put a 10px margin down both sides of
+     the landing hero. */
+  .app-shell .app-main { padding-left:10px; padding-right:10px; padding-top:10px; padding-bottom:78px; }
   .home-page { gap:12px; }
   .home-page .page-hero { border-radius:12px; }
   .home-hero { min-height:228px; }

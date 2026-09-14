@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { BookOpenCheck, ChevronRight, ListChecks, MessageCircle, Scale, Send, ShieldCheck } from "lucide-react";
+import { FreeSlips } from "@/components/predictions/free-slips";
 import { TopPickRow } from "@/components/predictions/tip-row";
 import { SportIcon, sportLabel } from "@/components/ui/sport-icon";
 import { communityLinks } from "@/lib/config/site";
 import { winRatePercent } from "@/lib/domain/performance";
 import { summarizeResults, resultsForRange } from "@/lib/domain/result-summary";
 import { applyTipFilters } from "@/lib/domain/tip-filters";
+import type { FreeSlipDay } from "@/lib/bookings/queries";
 import type { PublishedTip } from "@/lib/domain/tips";
 
 /**
@@ -17,12 +19,21 @@ import type { PublishedTip } from "@/lib/domain/tips";
  * picks, the real record — rather than with claims. No figure on this page is
  * invented: the record shows what has been graded, or says it has not started.
  */
-export function LandingSections({ tips, timezone }: { tips: readonly PublishedTip[]; timezone: string }) {
+export function LandingSections({
+  tips,
+  freeSlips,
+  timezone,
+}: {
+  tips: readonly PublishedTip[];
+  freeSlips: FreeSlipDay;
+  timezone: string;
+}) {
   const picks = applyTipFilters(tips, { window: "today", sport: null, query: null }).slice(0, 3);
   const record = summarizeResults(resultsForRange(tips, "all"), "all");
 
   return (
     <div className="landing-sections">
+      <FreeCodesSection day={freeSlips} timezone={timezone} />
       <TodaySection picks={picks} timezone={timezone} />
       <HowItWorks />
       <RecordSection won={record.won} lost={record.lost} settled={record.settled} winRate={winRatePercent(record.winRate)} />
@@ -41,6 +52,21 @@ function SectionIntro({ id, kicker, title, children }: { id: string; kicker: str
       <h2 id={id} className="landing-h2">{title}</h2>
       {children ? <p className="mt-3 text-[0.9375rem] leading-relaxed text-on-navy-2">{children}</p> : null}
     </div>
+  );
+}
+
+/* First after the hero: a free code is the one thing a visitor can use
+   straight away, with no account. The alt band keeps the bands alternating. */
+function FreeCodesSection({ day, timezone }: { day: FreeSlipDay; timezone: string }) {
+  return (
+    <section id="free-codes" className="landing-band landing-band-alt scroll-mt-20" aria-labelledby="free-codes-title">
+      <div className="landing-container">
+        <SectionIntro id="free-codes-title" kicker={`Free booking codes · ${day.label}`} title="Copy a free code and book it in seconds">
+          No account needed. Copy the code, paste it into your bookmaker&apos;s booking-code box, and check the games before you place anything.
+        </SectionIntro>
+        <FreeSlips day={day} timezone={timezone} className="mt-8" />
+      </div>
+    </section>
   );
 }
 

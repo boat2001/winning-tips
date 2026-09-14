@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { appNavigation, isCurrentRoute } from "@/lib/config/navigation";
+import { isCurrentRoute, navigationFor } from "@/lib/config/navigation";
 
 /**
  * Sticky bottom navigation for mobile and tablet (guide §12).
@@ -12,7 +12,7 @@ import { appNavigation, isCurrentRoute } from "@/lib/config/navigation";
  * column so the touch area comfortably clears the 44px minimum even though the
  * icon itself is 22px.
  */
-export function BottomNav() {
+export function BottomNav({ guest }: { guest: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -21,7 +21,7 @@ export function BottomNav() {
       className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-card-line bg-card shadow-raised xl:hidden"
     >
       <ul className="mx-auto flex max-w-3xl items-stretch">
-        {appNavigation.map((item) => {
+        {navigationFor(guest).map((item) => {
           const Icon = item.icon;
           const current = isCurrentRoute(pathname, item.href);
 

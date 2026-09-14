@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { SidebarPromo } from "@/components/app/sidebar-promo";
-import { appNavigation, isCurrentRoute } from "@/lib/config/navigation";
+import { homeHrefFor, isCurrentRoute, navigationFor } from "@/lib/config/navigation";
 
 /**
  * The desktop left rail (guide §12: sidebar from 1200px up).
@@ -13,20 +13,20 @@ import { appNavigation, isCurrentRoute } from "@/lib/config/navigation";
  * navigations are never on screen together, and each is the only one rendered
  * for its viewport family rather than one being visually hidden.
  */
-export function Sidebar() {
+export function Sidebar({ guest }: { guest: boolean }) {
   const pathname = usePathname();
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-navy-600/50 bg-navy-950 xl:flex">
-      <div className="px-5 pb-6 pt-6">
-        <Link href="/home" className="inline-flex rounded-control focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-400">
+      <div className="px-4 pb-6 pt-6">
+        <Link href={homeHrefFor(guest)} className="inline-flex rounded-control focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-400">
           <Logo size="md" showTagline priority />
         </Link>
       </div>
 
       <nav aria-label="Main" className="flex-1 px-3">
         <ul className="flex flex-col gap-1.5">
-          {appNavigation.map((item) => {
+          {navigationFor(guest).map((item) => {
             const Icon = item.icon;
             const current = isCurrentRoute(pathname, item.href);
 

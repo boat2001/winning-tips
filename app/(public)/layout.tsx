@@ -1,10 +1,19 @@
 import { AppShell } from "@/components/app/app-shell";
-import { MarketingHeader } from "@/components/app/marketing-header";
-import { getCurrentViewer } from "@/lib/app/current-viewer";
 import { SiteLinksFooter } from "@/components/app/site-links-footer";
+import { getCurrentViewer } from "@/lib/app/current-viewer";
 
-export default async function PublicLayout({children}:Readonly<{children:React.ReactNode}>) {
+/**
+ * Legacy newsprint pages, re-skinned by `.legacy-content`. Same shell for
+ * guests and members; `bleed` because these pages wrap every band in `Shell`,
+ * which already sets the measure and the side gutter.
+ */
+export default async function PublicLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const viewer = await getCurrentViewer();
-  if (viewer.id !== "guest") return <AppShell viewer={viewer}><div className="legacy-content">{children}</div><SiteLinksFooter /></AppShell>;
-  return <div className="app-shell"><MarketingHeader /><main id="main-content" className="legacy-content min-h-[70vh]">{children}</main><SiteLinksFooter /></div>;
+
+  return (
+    <AppShell viewer={viewer} bleed>
+      <div className="legacy-content min-h-[70vh]">{children}</div>
+      <SiteLinksFooter />
+    </AppShell>
+  );
 }

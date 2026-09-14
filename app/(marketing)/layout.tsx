@@ -1,17 +1,19 @@
-import { MarketingHeader } from "@/components/app/marketing-header";
+import { AppShell } from "@/components/app/app-shell";
+import { getCurrentViewer } from "@/lib/app/current-viewer";
 
 /**
- * The guest-facing marketing shell.
+ * The guest landing page.
  *
- * Its own route group because it takes neither chrome: no sidebar or bottom bar
- * (there is nothing to navigate yet) and none of the legacy newsprint header.
- * It still opts into the stadium tokens through `.app-shell`.
+ * It renders in the same shell as every other page, so a guest gets the same
+ * bottom bar and header as a member. `bleed` because the hero and the bands
+ * below it run edge to edge and carry their own gutters.
  */
-export default function MarketingLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function MarketingLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const viewer = await getCurrentViewer();
+
   return (
-    <div className="app-shell min-h-dvh">
-      <MarketingHeader />
-      <main>{children}</main>
-    </div>
+    <AppShell viewer={viewer} bleed>
+      {children}
+    </AppShell>
   );
 }

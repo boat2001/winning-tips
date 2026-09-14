@@ -17,12 +17,14 @@ import { applyTipFilters } from "@/lib/domain/tip-filters";
 import { greetingFor } from "@/lib/domain/viewer";
 import { getMemberVipPurchases } from "@/lib/vip/queries";
 import { CopyBookingCodeButton } from "@/components/member/copy-booking-code-button";
+import { FreeSlips } from "@/components/predictions/free-slips";
+import { getFreeSlips } from "@/lib/bookings/queries";
 
 export const metadata: Metadata = { title: "Home", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const user = await requireMember("/home");
-  const [viewer, data, purchases] = await Promise.all([getCurrentViewer(), getTipsData(), user ? getMemberVipPurchases(user.id) : []]);
+  const [viewer, data, purchases, freeSlips] = await Promise.all([getCurrentViewer(), getTipsData(), user ? getMemberVipPurchases(user.id) : [], getFreeSlips()]);
   const picks = applyTipFilters(data.tips, { window: "today", sport: null, query: null }).slice(0, 3);
   const week = summarizeResults(resultsForRange(data.tips, "7d"), "7d");
   const accuracy = winRatePercent(week.winRate);
@@ -40,6 +42,9 @@ export default async function HomePage() {
       </ul>
     </PageHero>
     <DataNotice unavailable={data.unavailable} />
+    <section id="free-codes" className="section-stack min-w-0 scroll-mt-24"><SectionHead title="Free Booking Codes" description={`${freeSlips.label} · copy a code, paste it on your bookmaker`} action={{ label: "All Tips", href: "/tips" }} />
+      <FreeSlips day={freeSlips} timezone={viewer.timezone} />
+    </section>
     <div className="home-grid">
       <section className="home-picks section-stack min-w-0"><SectionHead title="Today&apos;s Top Picks" action={{ label: "View All Picks", href: "/tips" }} />
         {picks.length ? <ul className="space-y-2.5">{picks.map(tip => <TopPickRow key={tip.id} tip={tip} timezone={viewer.timezone} />)}</ul> : <Panel className="p-7"><h3>Today&apos;s card is being prepared</h3><p className="mt-2 text-sm text-on-navy-2">Published predictions will appear here. Explore upcoming fixtures or review our settled record.</p><Link href="/tips?window=upcoming" className="mt-4 inline-flex min-h-11 items-center text-blue-300">See upcoming tips <ChevronRight className="size-4" /></Link></Panel>}

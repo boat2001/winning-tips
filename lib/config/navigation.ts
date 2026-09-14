@@ -24,6 +24,18 @@ export const appNavigation: readonly AppNavItem[] = [
 ] as const;
 
 /**
+ * Guests have no /home — that route is the member dashboard and redirects to
+ * the login page — so their Home is the landing page instead.
+ */
+export function homeHrefFor(guest: boolean): string {
+  return guest ? "/" : "/home";
+}
+
+export function navigationFor(guest: boolean): readonly AppNavItem[] {
+  return guest ? appNavigation.map((item) => (item.href === "/home" ? { ...item, href: homeHrefFor(true) } : item)) : appNavigation;
+}
+
+/**
  * Whether a nav item should read as current.
  *
  * Exact match on the top-level route, plus a prefix match for its children, so

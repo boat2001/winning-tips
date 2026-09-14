@@ -14,12 +14,13 @@ import { communityLinks } from "@/lib/config/site";
 import { SiteLinksFooter } from "@/components/app/site-links-footer";
 import { LandingSections } from "@/components/marketing/landing-sections";
 import { getTipsData } from "@/lib/app/tips";
+import { getFreeSlips } from "@/lib/bookings/queries";
 import { launchCountry } from "@/lib/config/countries";
 export const metadata:Metadata={title:"Your Home for Smart Sports Predictions",alternates:{canonical:"/"},description:"Sports predictions, clear analysis and a transparent results record. Built for Africa, starting in Ghana."};
 export const dynamic="force-dynamic";
 export default async function LandingPage(){
   const user=await getCurrentUser(); if(user)redirect("/home");
-  const data=await getTipsData();
+  const [data,freeSlips]=await Promise.all([getTipsData(),getFreeSlips()]);
   return <><section className="landing-hero">
     <Image src={pitchImage} alt="" fill priority sizes="100vw" className="landing-pitch"/>
     <div className="landing-wash" aria-hidden/>
@@ -39,5 +40,5 @@ export default async function LandingPage(){
     </div>
     <p className="landing-script">More<br/>Winners<br/>Together<span/></p>
     <p className="landing-script-right">Different<br/>Games.<br/>Same Passion.<span/></p>
-  </section><LandingSections tips={data.tips} timezone={launchCountry.timezone}/><SiteLinksFooter/></>;
+  </section><LandingSections tips={data.tips} freeSlips={freeSlips} timezone={launchCountry.timezone}/><SiteLinksFooter/></>;
 }
