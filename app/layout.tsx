@@ -65,7 +65,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   colorScheme: "dark",
-  themeColor: "#001938",
+  // The browser bar continues the top bar: white on phones and tablets, navy
+  // beside the desktop sidebar. Breakpoint matches --breakpoint-xl (75rem).
+  themeColor: [
+    { media: "(max-width: 74.99rem)", color: "#ffffff" },
+    { media: "(min-width: 75rem)", color: "#001938" },
+  ],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

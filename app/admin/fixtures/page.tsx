@@ -62,11 +62,11 @@ export default async function AdminFixturesPage({
   }, new Map());
 
   return (
-    <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
-      <h1 className="text-4xl font-semibold tracking-[-0.055em] text-ink sm:text-6xl">Tips desk</h1>
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-7 sm:py-10">
+      <h1 className="text-3xl font-semibold tracking-[-0.045em] text-ink sm:text-4xl">Tips desk</h1>
 
-      <section className="mt-10 overflow-hidden rounded-[2rem] border border-ink/10 bg-white">
-        <nav className="grid grid-cols-3 gap-1 border-b border-ink/8 bg-[#fafbf5] p-2 sm:p-3" aria-label="Tips day">
+      <section className="mt-6 overflow-hidden rounded-sharp border border-line bg-white">
+        <nav className="grid grid-cols-3 gap-1 border-b border-line bg-paper p-2 sm:p-3" aria-label="Tips day">
           {windows.map((window) => {
             const active = window.key === activeDay;
             return (
@@ -118,7 +118,7 @@ export default async function AdminFixturesPage({
                 </div>
                 <div className="space-y-2">
                   {leagueFixtures.map((fixture) => (
-                    <Link href={`/admin/predictions/new?fixtureId=${fixture.id}`} key={fixture.id} className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-sharp border border-ink/8 bg-[#fafbf5] px-3 py-4 transition hover:border-blue hover:bg-blue-wash sm:gap-6 sm:px-5">
+                    <Link href={`/admin/predictions/new?fixtureId=${fixture.id}`} key={fixture.id} className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-sharp border border-line bg-paper px-3 py-4 transition hover:border-blue hover:bg-blue-wash sm:gap-6 sm:px-5">
                       <div className="flex min-w-0 items-center gap-3">
                         <span className="grid size-9 shrink-0 place-items-center rounded-sharp bg-white text-[0.65rem] font-semibold text-blue">{getTeamMark(fixture.homeTeam.name)}</span>
                         <span className="truncate text-sm font-semibold text-ink">{fixture.homeTeam.name}</span>

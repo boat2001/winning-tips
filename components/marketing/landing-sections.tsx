@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { BookOpenCheck, ChevronRight, ListChecks, MessageCircle, Scale, Send, ShieldCheck } from "lucide-react";
-import { FreeSlips } from "@/components/predictions/free-slips";
-import { TopPickRow } from "@/components/predictions/tip-row";
+import { TipsBoard } from "@/components/predictions/tips-board";
 import { SportIcon, sportLabel } from "@/components/ui/sport-icon";
 import { communityLinks } from "@/lib/config/site";
 import { winRatePercent } from "@/lib/domain/performance";
 import { summarizeResults, resultsForRange } from "@/lib/domain/result-summary";
-import { applyTipFilters } from "@/lib/domain/tip-filters";
-import type { FreeSlipDay } from "@/lib/bookings/queries";
 import type { PublishedTip } from "@/lib/domain/tips";
+import type { FreeTipsBoard } from "@/lib/predictions/board";
 
 /**
  * Everything below the landing hero (guide §14.1).
@@ -21,20 +19,18 @@ import type { PublishedTip } from "@/lib/domain/tips";
  */
 export function LandingSections({
   tips,
-  freeSlips,
+  board,
   timezone,
 }: {
   tips: readonly PublishedTip[];
-  freeSlips: FreeSlipDay;
+  board: FreeTipsBoard;
   timezone: string;
 }) {
-  const picks = applyTipFilters(tips, { window: "today", sport: null, query: null }).slice(0, 3);
   const record = summarizeResults(resultsForRange(tips, "all"), "all");
 
   return (
     <div className="landing-sections">
-      <FreeCodesSection day={freeSlips} timezone={timezone} />
-      <TodaySection picks={picks} timezone={timezone} />
+      <FreeTipsSection board={board} timezone={timezone} />
       <HowItWorks />
       <RecordSection won={record.won} lost={record.lost} settled={record.settled} winRate={winRatePercent(record.winRate)} />
       <SportsSection />
@@ -55,50 +51,23 @@ function SectionIntro({ id, kicker, title, children }: { id: string; kicker: str
   );
 }
 
-/* First after the hero: a free code is the one thing a visitor can use
-   straight away, with no account. The alt band keeps the bands alternating. */
-function FreeCodesSection({ day, timezone }: { day: FreeSlipDay; timezone: string }) {
+/* First after the hero: the free card is the one thing a visitor can use
+   straight away, with no account. */
+function FreeTipsSection({ board, timezone }: { board: FreeTipsBoard; timezone: string }) {
   return (
-    <section id="free-codes" className="landing-band landing-band-alt scroll-mt-20" aria-labelledby="free-codes-title">
+    <section id="free-tips" className="landing-band scroll-mt-20" aria-labelledby="free-tips-title">
       <div className="landing-container">
-        <SectionIntro id="free-codes-title" kicker={`Free booking codes · ${day.label}`} title="Copy a free code and book it in seconds">
-          No account needed. Copy the code, paste it into your bookmaker&apos;s booking-code box, and check the games before you place anything.
+        <SectionIntro id="free-tips-title" kicker="Free tips · No account needed" title="Free Tips & Predictions">
+          Yesterday&apos;s results and today&apos;s card, with the booking code to copy underneath. Check every game on your bookmaker before you place anything.
         </SectionIntro>
-        <FreeSlips day={day} timezone={timezone} className="mt-8" />
-      </div>
-    </section>
-  );
-}
-
-function TodaySection({ picks, timezone }: { picks: readonly PublishedTip[]; timezone: string }) {
-  return (
-    <section className="landing-band" aria-labelledby="today-title">
-      <div className="landing-container grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] lg:items-center">
-        <div>
-          <p className="landing-kicker">Today</p>
-          <h2 id="today-title" className="landing-h2">Read today&apos;s predictions before you decide anything</h2>
-          <p className="mt-3 text-[0.9375rem] leading-relaxed text-on-navy-2">
-            Every tip names the market, the selection and the reasoning behind it. Open one to see the analysis in full.
-          </p>
-          <Link href="/tips" className="landing-link mt-5">
-            See all of today&apos;s tips <ChevronRight aria-hidden className="size-4" />
-          </Link>
-        </div>
-        {picks.length > 0 ? (
-          <ul className="space-y-2.5">
-            {picks.map((tip) => (
-              <TopPickRow key={tip.id} tip={tip} timezone={timezone} />
-            ))}
-          </ul>
-        ) : (
-          <div className="rounded-card border border-navy-600 bg-navy-800 p-6">
-            <h3>Today&apos;s card is being prepared</h3>
-            <p className="mt-2 text-sm text-on-navy-2">Predictions are published before kick-off. Look at what&apos;s coming up in the meantime.</p>
-            <Link href="/tips?window=upcoming" className="landing-link mt-4">
-              Upcoming tips <ChevronRight aria-hidden className="size-4" />
-            </Link>
-          </div>
-        )}
+        <TipsBoard
+          days={board.days}
+          bookingsByDate={board.bookingsByDate}
+          unavailable={board.unavailable}
+          timezone={timezone}
+          viewAllHref="/tips"
+          className="mt-8"
+        />
       </div>
     </section>
   );

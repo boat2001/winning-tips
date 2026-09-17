@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getDatabase } from "@/lib/db/client";
 import { getFixtureDateWindows, getUtcDayRange } from "@/lib/football/dates";
 import { requireUser } from "@/lib/auth/authorization";
+import { adminRoles } from "@/lib/auth/constants";
 import { isDesignPreview, resolveMemberCountry } from "@/lib/config/countries";
 import { getMemberCountryCode } from "@/lib/app/preferences";
 import type { Viewer } from "@/lib/domain/viewer";
@@ -39,5 +40,6 @@ export async function getCurrentViewer(): Promise<Viewer> {
     plan: premium ? "PREMIUM" : "FREE",
     countryCode: country.countryCode, countryName: country.name, timezone: country.timezone,
     location: null, tagline: null, unreadNotifications: 0,
+    canAccessAdmin: user ? adminRoles.includes(user.role as (typeof adminRoles)[number]) : false,
   };
 }

@@ -5,12 +5,6 @@ export const siteConfig = {
   description:
     "Daily football predictions with the market, the selection and the reasoning shown in full. Free tips every day, VIP slips when you want them.",
   locale: "en_GH",
-  navigation: [
-    { label: "Predictions", href: "/predictions" },
-    { label: "Results", href: "/results" },
-    { label: "Performance", href: "/performance" },
-    { label: "VIP", href: "/vip" },
-  ],
 } as const;
 
 export const communityLinks = {

@@ -98,6 +98,24 @@ function gradeBothTeamsToScore(selection: string, home: number, away: number): S
   return null;
 }
 
+/**
+ * Whether this market and selection are ones the engine can grade from a final
+ * score. Used to screen incoming slips: a leg nothing can settle automatically
+ * either sits PENDING until someone remembers it, or gets a hand-typed result —
+ * neither belongs on a card sold on the strength of its public record.
+ *
+ * Decided by running the real rules against two synthetic final scores rather
+ * than by a second copy of the market list, which would drift the first time a
+ * rule changed. A market that grades under neither score is one we cannot grade.
+ */
+export function canAutoSettle(input: Pick<SettlementInput, "market" | "selection" | "specifier" | "homeTeam" | "awayTeam">): boolean {
+  const probes: Array<Pick<SettlementInput, "homeScore" | "awayScore">> = [
+    { homeScore: 1, awayScore: 0 },
+    { homeScore: 2, awayScore: 2 },
+  ];
+  return probes.some((scores) => settlePrediction({ ...input, ...scores, fixtureStatus: "FINISHED" }) !== null);
+}
+
 export function settlePrediction(input: SettlementInput): SettlementDecision | null {
   if (input.fixtureStatus === "CANCELLED") return { grade: "VOID", rule: "fixture-cancelled" };
   if (input.fixtureStatus !== "FINISHED") return null;

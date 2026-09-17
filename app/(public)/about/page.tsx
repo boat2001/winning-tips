@@ -42,7 +42,7 @@ export default function AboutPage() {
             The free card goes up every day. Start there.
           </h2>
           <div className="mt-6 flex flex-wrap gap-3">
-            <ButtonLink href="/predictions">Today&apos;s predictions</ButtonLink>
+            <ButtonLink href="/tips">Today&apos;s predictions</ButtonLink>
             <ButtonLink href="/vip" variant="ghost">
               VIP slips
             </ButtonLink>

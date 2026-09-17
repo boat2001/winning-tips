@@ -1,123 +1,16 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
-import { publicBookingTag, publicPredictionTag, publicVipTag } from "@/lib/cache/tags";
-import { isDesignPreview } from "@/lib/config/countries";
+import { publicBookingTag, publicVipTag } from "@/lib/cache/tags";
 import { getDatabase } from "@/lib/db/client";
-import { getFixtureDateWindows, getUtcDayRange } from "@/lib/football/dates";
+import { getUtcDayRange } from "@/lib/football/dates";
 
-export interface FreeSlipGame {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  league: string;
-  kickoffAt: string;
-  market: string;
-  selection: string;
-  odds: string;
-  result: string;
-}
-
-export interface FreeSlip {
+/** A free booking code, as the public boards show it. */
+export interface PublicBooking {
   id: string;
   title: string;
   platform: string;
   code: string;
-  shareUrl: string | null;
-  totalOdds: string | null;
-  games: FreeSlipGame[];
-}
-
-export interface FreeSlipDay {
-  label: "Today" | "Tomorrow";
-  date: string;
-  slips: FreeSlip[];
-}
-
-const getCachedFreeSlipsByDate = unstable_cache(async function getCachedFreeSlipsByDate(date: string): Promise<FreeSlip[]> {
-  const bookings = await getDatabase().booking.findMany({
-    where: { bookingDate: getUtcDayRange(date).start, category: "FREE", isActive: true, deletedAt: null },
-    select: {
-      id: true,
-      title: true,
-      platform: true,
-      code: true,
-      shareUrl: true,
-      totalOdds: true,
-      predictions: {
-        // Same visibility rules as the tips list: published, released, and
-        // never mock-provider demo fixtures (guide §21.8).
-        where: {
-          status: "PUBLISHED",
-          visibility: "FREE",
-          OR: [{ publishAt: null }, { publishAt: { lte: new Date() } }],
-          fixture: { provider: { not: "mock" } },
-        },
-        select: {
-          id: true,
-          market: true,
-          selection: true,
-          odds: true,
-          result: true,
-          fixture: {
-            select: {
-              kickoffAt: true,
-              league: { select: { name: true } },
-              homeTeam: { select: { name: true } },
-              awayTeam: { select: { name: true } },
-            },
-          },
-        },
-        orderBy: { fixture: { kickoffAt: "asc" } },
-      },
-    },
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-  });
-
-  return bookings.map((booking) => ({
-    id: booking.id,
-    title: booking.title,
-    platform: booking.platform,
-    code: booking.code,
-    // Admin-entered, and rendered as a link: anything but a web URL (say a
-    // javascript: URI) is dropped rather than trusted.
-    shareUrl: booking.shareUrl && /^https?:\/\//i.test(booking.shareUrl) ? booking.shareUrl : null,
-    totalOdds: booking.totalOdds?.toString() ?? null,
-    games: booking.predictions.map((prediction) => ({
-      id: prediction.id,
-      homeTeam: prediction.fixture.homeTeam.name,
-      awayTeam: prediction.fixture.awayTeam.name,
-      league: prediction.fixture.league.name,
-      kickoffAt: prediction.fixture.kickoffAt.toISOString(),
-      market: prediction.market,
-      selection: prediction.selection,
-      odds: prediction.odds.toString(),
-      result: prediction.result,
-    })),
-  }));
-}, ["free-slips-by-date-v1"], { revalidate: 60, tags: [publicBookingTag, publicPredictionTag] });
-
-/**
- * The free slips to put in front of a visitor: today's, or tomorrow's when
- * today has none yet — a code for tomorrow's games can be booked tonight,
- * which beats showing an empty card.
- *
- * Never throws. The landing page renders it above the fold for guests, and a
- * database hiccup there should cost one section, not the whole page.
- */
-export async function getFreeSlips(reference = new Date()): Promise<FreeSlipDay> {
-  const [, today, tomorrow] = getFixtureDateWindows(reference);
-  const empty: FreeSlipDay = { label: "Today", date: today.date, slips: [] };
-  if (isDesignPreview()) return empty;
-
-  try {
-    const todays = await getCachedFreeSlipsByDate(today.date);
-    if (todays.length) return { label: "Today", date: today.date, slips: todays };
-    const tomorrows = await getCachedFreeSlipsByDate(tomorrow.date);
-    return tomorrows.length ? { label: "Tomorrow", date: tomorrow.date, slips: tomorrows } : empty;
-  } catch {
-    return empty;
-  }
 }
 
 const getCachedPublicBookingsByDates = unstable_cache(async function getCachedPublicBookingsByDates(dates: string[]) {

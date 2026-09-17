@@ -36,7 +36,7 @@ export async function generateMetadata({
   return {
     title: `${tip.home.name} vs ${tip.away.name}`,
     description: `${tip.competition}: ${tip.market} — ${tip.selection}. Model confidence and reasoning in full.`,
-    robots: { index: false, follow: false },
+    alternates: { canonical: `/tips/${slug}` },
   };
 }
 

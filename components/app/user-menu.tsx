@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Crown, LogOut, Settings, User as UserIcon } from "lucide-react";
+import { ChevronDown, Crown, LogOut, Settings, ShieldCheck, User as UserIcon } from "lucide-react";
 import { logoutAction } from "@/app/(public)/logout-action";
 import { Avatar } from "@/components/ui/avatar";
 import { type Viewer, planLabel } from "@/lib/domain/viewer";
@@ -56,29 +56,31 @@ export function UserMenu({ viewer }: { viewer: Viewer }) {
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
-        className="flex items-center gap-2.5 rounded-pill border border-navy-600 bg-navy-800/70 py-1.5 pl-1.5 pr-2.5 transition-colors hover:border-blue-400 sm:pr-3"
+        className="flex items-center gap-2.5 rounded-pill border border-card-line bg-card-2 py-1.5 pl-1.5 pr-2.5 transition-colors hover:border-blue-500 sm:pr-3 xl:border-navy-600 xl:bg-navy-800/70 xl:hover:border-blue-400"
       >
         <Avatar name={viewer.displayName} src={viewer.avatarUrl} size="sm" />
         <span className="hidden min-w-0 text-left sm:block">
-          <span className="block truncate text-[0.8125rem] font-semibold leading-tight text-on-navy">
+          <span className="block truncate text-[0.8125rem] font-semibold leading-tight text-ink-900 xl:text-on-navy">
             {viewer.displayName}
           </span>
-          <span className="flex items-center gap-1 text-[0.6875rem] leading-tight text-gold-500">
-            {viewer.plan === "PREMIUM" ? <Crown aria-hidden className="size-3 fill-gold-500" /> : null}
+          {/* gold-500 is too faint on the white bar below xl; the deeper gold reads. */}
+          <span className="flex items-center gap-1 text-[0.6875rem] leading-tight text-gold xl:text-gold-500">
+            {viewer.plan === "PREMIUM" ? <Crown aria-hidden className="size-3 fill-gold xl:fill-gold-500" /> : null}
             {planLabel(viewer.plan)}
           </span>
         </span>
-        <ChevronDown aria-hidden className={cn("size-4 text-on-navy-muted transition-transform", open && "rotate-180")} />
+        <ChevronDown aria-hidden className={cn("size-4 text-ink-400 transition-transform xl:text-on-navy-muted", open && "rotate-180")} />
       </button>
 
+      {/* The menu takes the bar's tone: white under the white bar, navy at xl. */}
       {open ? (
         <div
           role="menu"
           aria-label="Account"
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-card border border-navy-600 bg-navy-850 py-1.5 shadow-raised"
+          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-card border border-card-line bg-card py-1.5 shadow-raised xl:border-navy-600 xl:bg-navy-850"
         >
-          <p className="border-b border-navy-600 px-4 pb-2.5 pt-1.5 text-xs text-on-navy-muted">
-            Signed in as <span className="font-semibold text-on-navy-2">{viewer.handle}</span>
+          <p className="border-b border-card-line px-4 pb-2.5 pt-1.5 text-xs text-ink-500 xl:border-navy-600 xl:text-on-navy-muted">
+            Signed in as <span className="font-semibold text-ink-900 xl:text-on-navy-2">{viewer.handle}</span>
           </p>
 
           {MENU_ITEMS.map((item) => (
@@ -87,21 +89,33 @@ export function UserMenu({ viewer }: { viewer: Viewer }) {
               role="menuitem"
               href={item.href}
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-on-navy-2 transition-colors hover:bg-navy-800 hover:text-on-navy"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-card-2 hover:text-blue-600 xl:text-on-navy-2 xl:hover:bg-navy-800 xl:hover:text-on-navy"
             >
               <item.icon aria-hidden className="size-4" />
               {item.label}
             </Link>
           ))}
 
+          {viewer.canAccessAdmin ? (
+            <Link
+              role="menuitem"
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 border-t border-card-line px-4 py-2.5 text-sm font-semibold text-green-600 transition-colors hover:bg-card-2 xl:border-navy-600 xl:text-green-400 xl:hover:bg-navy-800"
+            >
+              <ShieldCheck aria-hidden className="size-4" />
+              Admin panel
+            </Link>
+          ) : null}
+
           {/* Sign-out is a form action, not a link: it revokes the session
               server-side and must not be triggerable by a prefetch or a
               crawler. Reuses the existing action rather than a second path. */}
-          <form action={logoutAction} className="border-t border-navy-600">
+          <form action={logoutAction} className="border-t border-card-line xl:border-navy-600">
             <button
               role="menuitem"
               type="submit"
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-on-navy-2 transition-colors hover:bg-navy-800 hover:text-on-navy"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-card-2 hover:text-blue-600 xl:text-on-navy-2 xl:hover:bg-navy-800 xl:hover:text-on-navy"
             >
               <LogOut aria-hidden className="size-4" />
               Log out

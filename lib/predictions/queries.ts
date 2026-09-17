@@ -163,24 +163,6 @@ export async function getPredictionDayBoard(reference = new Date(), premiumAcces
   return getCachedPredictionDayBoard(toDateKey(reference), normalizedAccess);
 }
 
-export async function getPublicPredictionBySlug(slug: string, premiumAccess: PremiumAccess = false) {
-  const prediction = await getDatabase().prediction.findFirst({
-    where: { slug, status: "PUBLISHED", OR: [{ bookingId: null }, { booking: { isActive: true } }] },
-    select: {
-      id: true,
-      slug: true,
-      visibility: true,
-      result: true,
-      market: true, selection: true, odds: true, confidence: true, analysis: true,
-      ...relationSelect,
-    },
-  });
-
-  if (!prediction) return null;
-  const locked = prediction.visibility === "PREMIUM" && !canAccessPremium(premiumAccess, prediction.deck?.id ?? null);
-  return toPublicPrediction(prediction, locked);
-}
-
 const getCachedPublicPerformance = unstable_cache(async function getCachedPublicPerformance() {
   const grouped = await getDatabase().prediction.groupBy({
     by: ["result"],

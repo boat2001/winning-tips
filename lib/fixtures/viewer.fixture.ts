@@ -13,4 +13,5 @@ export const fixtureViewer: Viewer = {
   location: "Accra, Ghana",
   tagline: "Predict smarter. Win together.",
   unreadNotifications: 3,
+  canAccessAdmin: false,
 };

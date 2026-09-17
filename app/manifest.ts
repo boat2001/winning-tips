@@ -7,12 +7,13 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Free daily football predictions, match analysis and premium VIP slips.",
     start_url: "/",
     display: "standalone",
-    // Navy, matching the stadium ground and the viewport theme colour. These
-    // were still the retired newsprint cream, which mattered little behind an
-    // opaque white icon tile and matters a lot now the icon is transparent —
-    // this is the colour that shows through it on the splash screen.
+    // The splash ground is navy, matching the stadium ground. It was still the
+    // retired newsprint cream, which mattered little behind an opaque white
+    // icon tile and matters a lot now the icon is transparent — this is the
+    // colour that shows through it on the splash screen.
     background_color: "#001938",
-    theme_color: "#001938",
+    // White, continuing the top bar an installed app opens under on a phone.
+    theme_color: "#ffffff",
     icons: [
       // purpose "any" (the default): the artwork runs edge to edge, so it has no
       // safe zone to spare and must not be offered as maskable — Android would

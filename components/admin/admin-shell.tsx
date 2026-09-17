@@ -4,17 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { logoutAction } from "@/app/(public)/logout-action";
-import { Wordmark } from "@/components/brand/wordmark";
+import { Logo } from "@/components/brand/logo";
 
 const navigation = [
   ["Dashboard", "/admin", "dashboard"],
   ["Games Management", "/admin/games", "games"],
   ["VIP Games Control", "/admin/games-control", "controls"],
+  ["Sources", "/admin/sources", "sources"],
   ["Automation", "/admin/automation", "controls"],
   ["Users", "/admin/users", "users"],
   ["Notifications", "/admin/notifications", "notifications"],
-  ["SMS", "/admin/sms", "messages"],
-  ["Community", "/admin/community", "messages"],
+  ["Community", "/admin/community", "community"],
   ["Settings", "/admin/settings", "settings"],
 ] as const;
 
@@ -27,7 +27,8 @@ function NavIcon({ name }: { name: NavIconName }) {
     controls: <><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5" /><circle cx="16" cy="6" r="2" /><circle cx="8" cy="12" r="2" /><circle cx="13" cy="18" r="2" /></>,
     users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
     notifications: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></>,
-    messages: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></>,
+    community: <><path d="M21 11.5a7.5 7.5 0 0 1-11.1 6.57L4 19.5l1.43-4.9A7.5 7.5 0 1 1 21 11.5Z" /><path d="M9 11.5h.01M13 11.5h.01M17 11.5h.01" /></>,
+    sources: <><path d="M4 7V5a1 1 0 0 1 1-1h4l2 2h8a1 1 0 0 1 1 1v2" /><path d="M3.5 9h17l-1.6 9.2a2 2 0 0 1-2 1.8H7.1a2 2 0 0 1-2-1.8Z" /><path d="M12 12v4M10 14h4" /></>,
     settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.08A1.7 1.7 0 0 0 8.94 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.57 15 1.7 1.7 0 0 0 3 14H3v-4h.08A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88L4.2 7l2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.57 1.7 1.7 0 0 0 10 3V3h4v.08A1.7 1.7 0 0 0 15.06 4.6a1.7 1.7 0 0 0 1.88-.34L17 4.2 19.83 7l-.06.06A1.7 1.7 0 0 0 19.43 9 1.7 1.7 0 0 0 21 10h.08v4H21a1.7 1.7 0 0 0-1.6 1Z" /></>,
     logout: <><path d="M10 17l5-5-5-5M15 12H3" /><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /></>,
   };
@@ -44,7 +45,7 @@ export function AdminShell({ children, role }: { children: React.ReactNode; disp
   const [open, setOpen] = useState(false);
   const visibleNavigation = navigation.filter(([, href]) => {
     if (href === "/admin/users" || href === "/admin/settings") return role === "SUPER_ADMIN";
-    if (href === "/admin/games-control") return role === "SUPER_ADMIN" || role === "ADMIN";
+    if (href === "/admin/games-control" || href === "/admin/sources") return role === "SUPER_ADMIN" || role === "ADMIN";
     return true;
   });
 
@@ -58,7 +59,7 @@ export function AdminShell({ children, role }: { children: React.ReactNode; disp
   const sidebar = (
     <>
       <div className="flex h-16 items-center border-b border-line px-4">
-        <Wordmark size="sm" />
+        <Logo size="sm" />
       </div>
       <p className="eyebrow border-b border-line px-4 py-3">Control panel</p>
       <nav className="flex-1 overflow-y-auto py-2" aria-label="Admin navigation">
@@ -99,24 +100,24 @@ export function AdminShell({ children, role }: { children: React.ReactNode; disp
       )}
 
       <div className="admin-content min-w-0 flex-1">
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-3 border-b border-line-2 bg-surface px-4 sm:px-5">
+        <header className="admin-topbar sticky top-0 z-40 flex h-16 items-center justify-between gap-3 border-b px-4 sm:px-5">
           <div className="flex min-w-0 items-center gap-3">
             <button
               onClick={() => setOpen(true)}
               aria-label="Open admin menu"
-              className="grid size-10 shrink-0 place-items-center border border-line-2 text-ink md:hidden"
+              className="grid size-10 shrink-0 place-items-center rounded-control border border-card-line text-ink-900 md:hidden"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-none stroke-current stroke-2">
                 <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             </button>
-            <Link href="/admin" className="flex min-w-0 items-center gap-2 md:hidden">
-              <Wordmark size="sm" />
+            <Link href="/admin" aria-label="Admin dashboard" className="flex min-w-0 items-center gap-2 md:hidden">
+              <Logo size="sm" tone="light" />
             </Link>
             <p className="eyebrow hidden md:block">Control panel · {role.replaceAll("_", " ").toLowerCase()}</p>
           </div>
 
-          <Link href="/" className="btn btn-ghost h-10 min-h-10 shrink-0 gap-2 px-3">
+          <Link href="/" className="btn btn-ghost h-10 min-h-10 shrink-0 gap-2 border-card-line px-3 text-ink-900 md:border-line-2 md:text-ink">
             <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4 fill-none stroke-current stroke-2">
               <path d="M14 5h5v5M19 5l-8 8" />
               <path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" />

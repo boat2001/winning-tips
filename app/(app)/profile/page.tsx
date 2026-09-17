@@ -8,6 +8,7 @@ import {
   HelpCircle,
   Moon,
   Send,
+  ShieldCheck,
   Target,
   Trophy,
 } from "lucide-react";
@@ -132,6 +133,19 @@ export default async function ProfilePage() {
 
       <Card as="section" className="overflow-hidden">
         <h2 className="sr-only">Account</h2>
+
+        {/* The account menu is hidden on phones, so this row is the way into
+            the panel there. */}
+        {viewer.canAccessAdmin ? (
+          <SettingsRow
+            icon={<ShieldCheck aria-hidden className="size-5" />}
+            tone="bg-green-600"
+            label="Admin panel"
+            description="Manage tips, slips, payments and members"
+            href="/admin"
+            value="Open"
+          />
+        ) : null}
 
         <SettingsRow
           icon={<Bookmark aria-hidden className="size-5" />}

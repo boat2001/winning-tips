@@ -69,6 +69,25 @@ export function winRateOf(won: number, settled: number): number | null {
   return settled > 0 ? won / settled : null;
 }
 
+/**
+ * The 95% Wilson lower bound on a win rate.
+ *
+ * Used wherever a record has to be judged rather than just displayed — VIP
+ * pricing and source screening both need "how good is this, allowing for how
+ * little we have seen", and a tiny sample must not read as a strong record.
+ * Null when nothing has settled.
+ */
+export function wilsonLowerBound(won: number, settled: number): number | null {
+  if (!Number.isInteger(won) || !Number.isInteger(settled) || won < 0 || settled < won) {
+    throw new Error("Invalid record: wins must be a whole number no greater than the settled count.");
+  }
+  if (settled === 0) return null;
+  const z = 1.96;
+  const z2 = z ** 2;
+  const rate = won / settled;
+  return (rate + z2 / (2 * settled) - z * Math.sqrt((rate * (1 - rate) + z2 / (4 * settled)) / settled)) / (1 + z2 / settled);
+}
+
 /** Whole-percent win rate for display, or null when there is no sample. */
 export function winRatePercent(winRate: number | null): number | null {
   return winRate === null ? null : Math.round(winRate * 100);

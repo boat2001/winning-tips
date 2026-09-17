@@ -85,6 +85,14 @@ enum SlipCategory {
   VIP3
 }
 
+/// Whether a card collected from a published source has been seen by a human.
+/// A card an admin loaded by hand is APPROVED on arrival: they were the review.
+enum ReviewState {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
 model League {
   id         String    @id @default(cuid())
   externalId String    @unique
@@ -263,6 +271,12 @@ model Booking {
   isActive    Boolean      @default(true)
   deletedAt   DateTime?
   sortOrder   Int          @default(0)
+  /// Where the code came from: "manual" for an admin-loaded code, otherwise the
+  /// id of the source that published it (lib/sources/registry.ts).
+  source      String       @default("manual")
+  /// The page the code was read from, so a collected card can be traced back.
+  sourceUrl   String?
+  reviewState ReviewState  @default(APPROVED)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   predictions Prediction[]
@@ -272,6 +286,8 @@ model Booking {
   @@index([category, bookingDate, isActive])
   @@index([countryCode, category, bookingDate, isActive])
   @@index([deletedAt])
+  @@index([reviewState, bookingDate])
+  @@index([source, bookingDate])
   @@map("bookings")
 }
 

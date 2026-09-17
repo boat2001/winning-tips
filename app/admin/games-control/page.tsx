@@ -24,11 +24,11 @@ export default async function GamesControlPage({ searchParams }: { searchParams?
   ]);
 
   return (
-    <main className="mx-auto max-w-7xl px-5 pb-10 sm:px-8 sm:pb-14">
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-7 sm:py-10">
       <h1 className="text-3xl font-semibold tracking-[-0.05em] text-ink sm:text-4xl">VIP Games Control</h1>
       <form className="mt-4 flex items-end gap-3" method="get"><input type="hidden" name="country" value={country.countryCode} /><label className="text-sm font-semibold">Card date<input className="mt-2 block rounded-sharp border border-line p-2" type="date" name="date" defaultValue={today} required /></label><button className="btn btn-ghost" type="submit">View cards</button></form>
       <p className="mt-3 text-sm text-muted">New cards are priced automatically from recorded whole-slip results. Launch prices apply until there are at least 30 eligible settled cards. Review the card before opening sales.</p>
-      <nav aria-label="Country edition" className="mt-4 flex flex-wrap gap-2">{enabledCountries().map((edition) => <Link key={edition.countryCode} href={`/admin/games-control?country=${edition.countryCode}`} aria-current={edition.countryCode === country.countryCode ? "page" : undefined} className={`rounded-full px-4 py-2 text-xs font-semibold ${edition.countryCode === country.countryCode ? "bg-ink text-white" : "bg-line text-ink-2 hover:bg-blue-wash"}`}>{edition.name} · {edition.currency}</Link>)}</nav>
+      <nav aria-label="Country edition" className="mt-4 flex flex-wrap gap-2">{enabledCountries().map((edition) => <Link key={edition.countryCode} href={`/admin/games-control?country=${edition.countryCode}`} aria-current={edition.countryCode === country.countryCode ? "page" : undefined} className={`rounded-full px-4 py-2 text-xs font-semibold ${edition.countryCode === country.countryCode ? "bg-blue-500 text-white" : "bg-navy-700 text-on-navy-2 hover:bg-navy-600 hover:text-on-navy"}`}>{edition.name} · {edition.currency}</Link>)}</nav>
       <section className="mt-6 grid gap-5 md:grid-cols-3">
         {plans.map((plan) => {
           const category = plan.deck?.slug ? categoryByDeckSlug[plan.deck.slug as keyof typeof categoryByDeckSlug] : undefined;

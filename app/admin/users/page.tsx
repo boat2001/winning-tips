@@ -87,7 +87,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   ];
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-8 sm:px-7 sm:pb-10">
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-7 sm:py-10">
       <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-3xl font-semibold tracking-[-0.05em] text-ink sm:text-4xl">User Management</h1>{!canManage ? <span className="rounded-full bg-hold-bg px-3 py-1.5 text-[0.65rem] font-semibold text-hold">VIEW ONLY</span> : null}</div>
 
       <section className="mt-5 grid grid-cols-2 gap-2 lg:grid-cols-4" aria-label="User metrics">

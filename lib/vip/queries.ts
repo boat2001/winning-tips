@@ -1,8 +1,12 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
+import { getMemberCountryCode } from "@/lib/app/preferences";
+import { getCurrentVipBookingsByDate } from "@/lib/bookings/queries";
 import { publicVipTag } from "@/lib/cache/tags";
+import { resolveMemberCountry } from "@/lib/config/countries";
 import { getDatabase } from "@/lib/db/client";
+import { getFixtureDateWindows } from "@/lib/football/dates";
 
 const getCachedActiveVipPlans = unstable_cache(async function getCachedActiveVipPlans() {
   return getDatabase().plan.findMany({
@@ -99,6 +103,32 @@ export async function getMemberVipPurchases(userId: string) {
       })),
     };
   });
+}
+
+/**
+ * Everything the VIP slip cards need for today, in the viewer's country
+ * edition.
+ *
+ * Never throws, and each part fails on its own. The cards are drawn from the
+ * tiers whatever happens, so a failing bookings query must not also take the
+ * plans with it — which is exactly how the three cards once vanished behind a
+ * single "couldn't load" box. `unavailable` tells the page to say the slip
+ * details may be missing.
+ */
+export async function getTodaysVipSlips(userId: string | null) {
+  const chosenCountry = userId ? await getMemberCountryCode(userId).catch(() => null) : null;
+  const { countryCode } = resolveMemberCountry(chosenCountry);
+  const [plans, bookings, purchasedBookingIds] = await Promise.all([
+    getActiveVipPlans().catch(() => null),
+    getCurrentVipBookingsByDate(getFixtureDateWindows()[1].date, countryCode).catch(() => null),
+    userId ? getPurchasedBookingIds(userId).catch(() => [] as string[]) : Promise.resolve([] as string[]),
+  ]);
+  return {
+    plans: plans ?? [],
+    bookings: bookings ?? new Map(),
+    purchasedBookingIds,
+    unavailable: plans === null || bookings === null,
+  };
 }
 
 export async function getPurchasedBookingIds(userId: string) {

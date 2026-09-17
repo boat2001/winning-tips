@@ -33,7 +33,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
   const total = grouped.reduce((sum, item) => sum + item._count._all, 0);
 
   return (
-    <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-7 sm:py-10">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-4xl font-semibold tracking-[-0.05em] text-ink">Games Management</h1>
         <SlipLoaderModal />

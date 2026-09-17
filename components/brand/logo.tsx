@@ -39,16 +39,25 @@ const taglineSize = {
  * The mark is imported rather than referenced by path so its URL carries a
  * content hash: replace the file and every cache invalidates on its own.
  */
+/* `light` is for the white mobile top bar. Tips steps down to green-600 and the
+   tagline to blue-600: the navy tones (green-400, cyan) wash out on white. */
+const tones = {
+  navy: { name: "text-on-navy", tips: "text-green-400", tagline: "" },
+  light: { name: "text-ink-900", tips: "text-green-600", tagline: "text-blue-600" },
+} as const;
+
 export function Logo({
   size = "md",
   showText = true,
   showTagline = false,
   priority = false,
+  tone = "navy",
 }: {
   size?: keyof typeof markSize;
   showText?: boolean;
   showTagline?: boolean;
   priority?: boolean;
+  tone?: keyof typeof tones;
 }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-2.5">
@@ -61,12 +70,12 @@ export function Logo({
       {showText ? (
         <span className="flex min-w-0 flex-col">
           <span
-            className={`whitespace-nowrap font-brand ${textSize[size]} font-bold leading-none tracking-[-0.01em] text-on-navy`}
+            className={`whitespace-nowrap font-brand ${textSize[size]} font-bold leading-none tracking-[-0.01em] ${tones[tone].name}`}
           >
-            Winning<span className="text-green-400">Tips</span>
+            Winning<span className={tones[tone].tips}>Tips</span>
           </span>
           {showTagline ? (
-            <span className={`kicker whitespace-nowrap leading-none ${taglineSize[size]}`}>{siteConfig.tagline}</span>
+            <span className={`kicker whitespace-nowrap leading-none ${taglineSize[size]} ${tones[tone].tagline}`}>{siteConfig.tagline}</span>
           ) : null}
         </span>
       ) : null}

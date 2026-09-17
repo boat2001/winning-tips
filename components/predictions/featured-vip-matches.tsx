@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckoutButton } from "@/components/payments/checkout-button";
 import { SectionHead } from "@/components/ui/layout";
+import { formatSlipPrice, resolveVipSlip } from "@/lib/vip/slip-status";
 
 type VipPlan = {
   id: string;
@@ -27,12 +28,6 @@ type VipBooking = {
   }>;
 };
 
-const categoryByDeckSlug = {
-  "vip-deck": "VIP1",
-  "vip-2-deck": "VIP2",
-  "vip-3-deck": "VIP3",
-} as const;
-
 /** A slip that was never published is not the same as one that sold out, so the
     two carry different words and different accents. */
 const statusLabel = {
@@ -54,15 +49,6 @@ const tierAccent: Record<string, string> = {
   VIP2: "#767e8c",
   VIP3: "#a5811b",
 };
-
-function formatCheckoutPrice(amountMinor: number, currency: string) {
-  const hasPesewas = amountMinor % 100 !== 0;
-  const amount = new Intl.NumberFormat("en-GH", {
-    minimumFractionDigits: hasPesewas ? 2 : 0,
-    maximumFractionDigits: 2,
-  }).format(amountMinor / 100);
-  return `${currency} ${amount}`;
-}
 
 function resultChip(result: string) {
   if (result === "WON") return { label: "Won", className: "result result-won" };
@@ -100,19 +86,13 @@ export function FeaturedVipMatches({
       {plans.length ? (
         <div className="mt-6 grid items-start gap-4 md:grid-cols-3">
           {plans.map((plan) => {
-            const category = plan.deck?.slug ? categoryByDeckSlug[plan.deck.slug as keyof typeof categoryByDeckSlug] : undefined;
-            const booking = category ? bookings.get(category) : undefined;
-            const predictions = booking?.predictions ?? [];
-            const hasResults = predictions.some((prediction) => prediction.result !== "PENDING");
-            const isPurchased = !previewPurchaseCtas && Boolean(booking && purchasedBookingIds.includes(booking.id));
-            // The card carries the price and the sales state. The tier's plan is
-            // only a fallback for a day whose card has not been loaded yet.
-            const priceMinor = booking?.priceMinor ?? plan.priceMinor;
-            const closed = booking?.salesClosed ?? false;
-            const soldOut = booking ? booking.isSoldOut : plan.isSoldOut;
-            const notPublished = !booking || predictions.length === 0 || priceMinor <= 0;
-            const status = notPublished ? "unpublished" : soldOut || closed ? "sold-out" : hasResults ? "results" : "available";
-            const checkoutPrice = formatCheckoutPrice(priceMinor, booking?.currency ?? plan.currency);
+            const { category, booking, predictions, isPurchased, priceMinor, currency, status } = resolveVipSlip(
+              plan,
+              bookings,
+              purchasedBookingIds,
+              previewPurchaseCtas,
+            );
+            const checkoutPrice = formatSlipPrice(priceMinor, currency);
             const accent = statusAccent[status] ?? tierAccent[category ?? "VIP1"] ?? "#0b5cff";
 
             return (

@@ -4,7 +4,7 @@ import { getPublishedPredictionSitemapRows } from "@/lib/predictions/queries";
 
 const staticRoutes = [
   { path: "/", priority: 1, changeFrequency: "daily" },
-  { path: "/predictions", priority: 0.9, changeFrequency: "daily" },
+  { path: "/tips", priority: 0.9, changeFrequency: "daily" },
   { path: "/vip", priority: 0.8, changeFrequency: "weekly" },
   { path: "/about", priority: 0.6, changeFrequency: "monthly" },
   { path: "/help", priority: 0.5, changeFrequency: "monthly" },
@@ -33,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority,
     })),
     ...predictions.map((prediction) => ({
-      url: new URL(`/predictions/${prediction.slug}`, siteUrl).toString(),
+      url: new URL(`/tips/${prediction.slug}`, siteUrl).toString(),
       lastModified: prediction.updatedAt,
       changeFrequency: "daily" as const,
       priority: 0.7,

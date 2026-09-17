@@ -13,5 +13,5 @@ export default async function EditPredictionPage({ params }: { params: Promise<{
     getDatabase().deck.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
   if (!prediction) notFound();
-  return <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14"><h1 className="text-4xl font-semibold tracking-[-0.05em] text-ink">Edit prediction</h1><div className="mt-8 rounded-sharp border border-line bg-white p-6 sm:p-8"><PredictionForm action={updatePrediction} fixtures={fixtures} decks={decks} prediction={prediction} /></div></main>;
+  return <main className="mx-auto max-w-7xl px-4 py-8 sm:px-7 sm:py-10 [&>*]:max-w-3xl"><h1 className="text-4xl font-semibold tracking-[-0.05em] text-ink">Edit prediction</h1><div className="mt-8 rounded-sharp border border-line bg-white p-6 sm:p-8"><PredictionForm action={updatePrediction} fixtures={fixtures} decks={decks} prediction={prediction} /></div></main>;
 }

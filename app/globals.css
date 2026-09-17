@@ -514,19 +514,34 @@
     color: var(--color-gold);
   }
 
+  /* Loading placeholders in the stadium system. The base is a translucent
+     wash of the on-navy text colour rather than a fixed grey, so one class
+     reads correctly on the page ground, a raised panel and the top bar alike.
+     The sweep stays faint: the old bright-white band, drawn for the paper
+     theme, flashed across navy. `.skeleton-on-card` is the same placeholder
+     for the white card surface. */
   .skeleton-shimmer {
     position: relative;
     overflow: hidden;
-    background: var(--color-paper-2);
+    border-radius: 8px;
+    background: rgb(199 220 242 / 0.09);
   }
 
   .skeleton-shimmer::after {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.7), transparent);
+    background: linear-gradient(90deg, transparent, rgb(199 220 242 / 0.08), transparent);
     content: "";
     transform: translateX(-100%);
-    animation: skeleton-shimmer 1.45s ease-in-out infinite;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+
+  .skeleton-on-card {
+    background: #e6eef8;
+  }
+
+  .skeleton-on-card::after {
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.85), transparent);
   }
 }
 
@@ -606,7 +621,6 @@
   .legacy-content .btn-primary { background: #0063fe; color: white; }
   .legacy-content input,.legacy-content textarea,.legacy-content select { background: #001938; color: white; border-color: #35628d; border-radius: 10px; }
   .legacy-content .rule-double { height: 3px; border: 0; background: linear-gradient(90deg,#3cf980,transparent); }
-  .legacy-content .hero-plate { background-image: none; }
   .profile-page .page-hero { min-height: 180px; }
   .profile-page .hero-athletes { width: 40%; }
   @media (min-width:768px) and (max-width:1199px) {
@@ -647,7 +661,9 @@
     .settings-control { flex-wrap:wrap; }
   }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *,*::before,*::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-.app-shell h2 { font-size:clamp(1.125rem,1.65vw,1.65rem); }
+/* Not the admin: this rule is unlayered, so it beats utilities and was blowing
+   the admin's small card labels (h2 "Total Users") up to section-heading size. */
+.app-shell:not(.legacy-content) h2 { font-size:clamp(1.125rem,1.65vw,1.65rem); }
 .app-shell aside nav a { min-height:58px; }
 .app-shell aside nav a[aria-current="page"] { background:linear-gradient(90deg,#00364b,#00213b 80%,#007c38); box-shadow:inset 2px 0 #3cf980,inset -2px 0 9px #00c43788; }
 .profile-page .hero-athletes { right:16%; width:36%; height:170%; object-position:center top; bottom:-70%; }
@@ -707,6 +723,14 @@
 .landing-picks {display:flex;align-items:center;gap:8px;min-height:58px;padding:12px 18px;border:1px solid #b7d6fe;border-radius:14px;background:#00193888;font-size:14px;font-weight:600;}.landing-picks svg {width:18px;}
 .landing-trust {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:30px;max-width:530px;}
 .landing-trust > div {display:flex;gap:10px;align-items:center;font-size:12px;line-height:1.4;}.landing-trust svg {width:28px;height:28px;flex-shrink:0;color:#3cf980;}
+/* Community channels sit a clear step below the two CTAs: the hero's job is
+   VIP and free tips, and the channels are where people follow along after. */
+.landing-channels {display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:18px;}
+.landing-channels > span {font-size:12px;font-weight:600;color:#c7dcf2;}
+.landing-channels a {display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border:1px solid #ffffff2e;border-radius:999px;background:#00193899;color:#fff;font-size:13px;font-weight:600;transition:border-color .15s;}
+.landing-channels a:hover {border-color:#3cf980;}
+.landing-channels svg {width:16px;height:16px;}
+@media(max-width:767px) { .landing-channels {margin-top:14px;} .landing-channels > span {width:100%;} }
 .landing-art {position:absolute;right:0;top:0;bottom:0;width:58%;pointer-events:none;}
 .landing-athletes {position:absolute;right:0;top:0;width:100%;height:80%;object-fit:contain;object-position:right top;}
 .landing-phone {position:absolute;z-index:2;bottom:-20%;right:32%;width:38%;transform:rotate(9deg);}.landing-phone img {width:100%;height:auto;filter:drop-shadow(0 12px 24px #0008);}
@@ -935,4 +959,29 @@
    larger space and the things inside a section stay tighter than the space
    around it. */
 .page-stack { display:flex; flex-direction:column; gap:clamp(1.5rem,2.6vw,2.5rem); }
+
+/* --- admin: white cards on the navy ground -----------------------------------
+   The admin renders inside .legacy-content, which points the newsprint tokens
+   at navy-ground values so page titles read white. Inside a white card that
+   made titles white-on-white, links cyan and inputs navy. A white card points
+   the same tokens back at the stadium on-card palette, so every bg-white panel
+   reads like the member app's cards without rewriting each utility. */
+.admin-content .bg-white {
+  --color-ink: #04142e; --color-ink-2: #1d3557; --color-muted: #4f6aa2; --color-faint: #7d93b8;
+  --color-paper: #f4f8fd; --color-paper-2: #eaf1fb; --color-surface: #ffffff;
+  --color-line: #e3ecf7; --color-line-2: #c9d6e8;
+  --color-blue: #0063fe; --color-blue-deep: #004eeb; --color-blue-wash: #e8f0ff; --color-blue-pale: #e8f0ff;
+  color: var(--color-ink);
+  color-scheme: light;
+}
+/* Beats `.legacy-content input`, which paints every field navy. */
+.admin-content .bg-white :is(input, select, textarea):not([type="checkbox"], [type="radio"], [type="hidden"]) {
+  background-color: var(--color-surface); color: var(--color-ink); border-color: var(--color-line-2);
+}
+.admin-content .bg-white :is(input, select, textarea):disabled { background-color: var(--color-paper); color: var(--color-faint); }
+
+/* The admin top bar is white where no sidebar stands beside it (below md),
+   like the member app's, and navy beside the sidebar. */
+.admin-topbar { background: #fff; border-color: var(--color-card-line); color-scheme: light; }
+@media (min-width: 768px) { .admin-topbar { background: var(--color-surface); border-color: var(--color-line-2); color-scheme: dark; } }
 .section-stack { display:flex; flex-direction:column; gap:clamp(0.875rem,1.1vw,1.125rem); }

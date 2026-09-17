@@ -12,21 +12,26 @@ import type { Viewer } from "@/lib/domain/viewer";
  * navigation belongs to the sidebar and the bottom bar, and there is no search
  * — the tips screen owns filtering, and a second way in only split attention.
  *
- *   below xl  logo with tagline, then account actions
- *   xl        no logo (the sidebar carries it), account actions on the right
+ *   below xl  white bar: logo with tagline, then account actions — it pairs
+ *             with the white bottom bar, so phones and tablets get a light
+ *             frame round the navy content
+ *   xl        navy bar beside the navy sidebar, no logo (the sidebar carries
+ *             it), account actions on the right
  */
 export function Topbar({ viewer }: { viewer: Viewer }) {
   const guest = viewer.id === "guest";
 
   return (
-    <header className="sticky top-0 z-30 border-b border-navy-600/50 bg-navy-850/95 backdrop-blur supports-[backdrop-filter]:bg-navy-850/80">
+    // Opaque white below xl: any translucency lets the navy page through and
+    // the bar reads grey. The frosted navy bar is kept for desktop.
+    <header className="sticky top-0 z-30 border-b border-card-line bg-card xl:border-navy-600/50 xl:bg-navy-850/95 xl:backdrop-blur xl:supports-[backdrop-filter]:bg-navy-850/80">
       <div className="mx-auto flex h-16 max-w-[84rem] items-center gap-3 px-4 sm:gap-4 sm:px-5 xl:h-[4.5rem]">
         <Link href={homeHrefFor(guest)} aria-label={`${siteConfig.name} home`} className="min-w-0 shrink-0 xl:hidden">
-          <Logo size="sm" showTagline priority />
+          <Logo size="sm" showTagline priority tone="light" />
         </Link>
 
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
-          <span className="hidden text-xs text-on-navy-2 md:block">{viewer.countryName}</span>
+          <span className="hidden text-xs text-ink-500 md:block xl:text-on-navy-2">{viewer.countryName}</span>
 
           {guest ? (
             <>
@@ -35,7 +40,7 @@ export function Topbar({ viewer }: { viewer: Viewer }) {
                   to sign-in. */}
               <Link
                 href="/login"
-                className="hidden min-h-11 items-center whitespace-nowrap px-2 text-sm font-semibold text-on-navy-2 transition-colors hover:text-on-navy min-[400px]:inline-flex"
+                className="hidden min-h-11 items-center whitespace-nowrap px-2 text-sm font-semibold text-ink-700 transition-colors hover:text-blue-600 min-[400px]:inline-flex xl:text-on-navy-2 xl:hover:text-on-navy"
               >
                 Log in
               </Link>
@@ -47,11 +52,11 @@ export function Topbar({ viewer }: { viewer: Viewer }) {
             <>
               <Link
                 href="/notifications"
-                className="relative inline-flex size-11 items-center justify-center rounded-full text-on-navy-2 transition-colors hover:bg-navy-700 hover:text-on-navy"
+                className="relative inline-flex size-11 items-center justify-center rounded-full text-ink-700 transition-colors hover:bg-card-2 hover:text-blue-600 xl:text-on-navy-2 xl:hover:bg-navy-700 xl:hover:text-on-navy"
               >
                 <Bell aria-hidden className="size-5" />
                 {viewer.unreadNotifications > 0 ? (
-                  <span aria-hidden className="absolute right-2.5 top-2.5 size-2.5 rounded-full bg-green-400 ring-2 ring-navy-850" />
+                  <span aria-hidden className="absolute right-2.5 top-2.5 size-2.5 rounded-full bg-green-500 ring-2 ring-card xl:bg-green-400 xl:ring-navy-850" />
                 ) : null}
                 <span className="sr-only">
                   Notifications

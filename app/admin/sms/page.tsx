@@ -8,7 +8,7 @@ export default async function SmsPage() {
   const providerConfigured = Boolean(process.env.SMS_API_KEY && process.env.SMS_SENDER_ID);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-8 sm:px-7 sm:pb-10">
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-7 sm:py-10">
       <h1 className="text-3xl font-semibold tracking-[-0.05em] text-ink sm:text-4xl">SMS</h1>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section className="rounded-sharp border border-line bg-white p-6"><div className="flex items-start justify-between gap-4"><div><h2 className="text-lg font-semibold text-ink">SMS Delivery</h2><p className="mt-2 text-sm text-muted">Send service updates to users who provided a phone number.</p></div><span className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold ${providerConfigured ? "bg-blue-wash text-blue" : "bg-hold-bg text-hold"}`}>{providerConfigured ? "CONFIGURED" : "SETUP REQUIRED"}</span></div><p className="mt-6 text-3xl font-semibold text-ink">{recipients.toLocaleString()}</p><p className="mt-1 text-sm text-muted">Available SMS recipients</p></section>

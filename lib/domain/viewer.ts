@@ -21,6 +21,11 @@ export interface Viewer {
   readonly location: string | null;
   readonly tagline: string | null;
   readonly unreadNotifications: number;
+  /**
+   * Shows the Admin panel link. Only a hint for the UI: every /admin route
+   * checks the role again on the server.
+   */
+  readonly canAccessAdmin: boolean;
 }
 
 const PLAN_LABEL: Record<MembershipPlan, string> = {

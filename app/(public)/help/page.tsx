@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 const topics = [
-  ["Predictions", "Browse the free card for yesterday, today and tomorrow, and search by team or competition.", "/predictions"],
+  ["Predictions", "Browse the free card for yesterday, today and tomorrow, and search by team or competition.", "/tips"],
   ["VIP slips", "See what is inside a slip before you buy, and how purchased slips stay unlocked for good.", "/vip"],
   ["Your account", "Update your display name and phone number, and review your payment history.", "/account"],
   ["Activity", "A full ledger of sign-ins, profile changes, payments and VIP access on your account.", "/activity"],

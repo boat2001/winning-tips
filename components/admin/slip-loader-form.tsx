@@ -21,7 +21,7 @@ export function SlipLoaderModal() {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-sharp bg-[var(--color-blue)] px-4 text-xs font-semibold text-white transition hover:bg-blue">
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-sharp bg-blue-500 px-4 text-xs font-semibold text-white transition hover:bg-blue-600">
         <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4 fill-none stroke-current stroke-2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
         Load Slip
       </button>

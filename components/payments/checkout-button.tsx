@@ -10,6 +10,7 @@ export function CheckoutButton({
   configured,
   label = "Buy slip",
   className = "",
+  buttonClassName = "btn btn-primary w-full",
 }: {
   planId: string;
   bookingId: string;
@@ -17,6 +18,8 @@ export function CheckoutButton({
   configured: boolean;
   label?: string;
   className?: string;
+  /** The legacy pages pass nothing; the member app passes its own button style. */
+  buttonClassName?: string;
 }) {
   const [state, action, pending] = useActionState(initializeCheckoutAction, {} as CheckoutState);
   return (
@@ -24,7 +27,7 @@ export function CheckoutButton({
       <input type="hidden" name="planId" value={planId} />
       <input type="hidden" name="bookingId" value={bookingId} />
       <input type="hidden" name="priceMinor" value={priceMinor} />
-      <button disabled={pending || !configured} className="btn btn-primary w-full">
+      <button disabled={pending || !configured} className={buttonClassName}>
         {pending ? "Opening checkout…" : !configured ? "Payments unavailable" : label}
       </button>
       {state.error && (

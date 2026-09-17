@@ -20,8 +20,8 @@ export function SlipSelectionControls() {
   }
 
   return (
-    <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1">
-      <button type="button" onClick={() => setAll(true)} className="min-h-10 shrink-0 whitespace-nowrap rounded-sharp bg-blue px-4 text-xs font-semibold text-white">Select all</button>
+    <div className="flex flex-wrap gap-2 pb-1">
+      <button type="button" onClick={() => setAll(true)} className="min-h-10 shrink-0 whitespace-nowrap rounded-sharp bg-blue-500 px-4 text-xs font-semibold text-white hover:bg-blue-600">Select all</button>
       <button type="button" onClick={() => setAll(false)} className="min-h-10 shrink-0 whitespace-nowrap rounded-sharp bg-line px-4 text-xs font-semibold text-ink-2">Clear selection</button>
       <button type="submit" disabled={!selected} className="min-h-10 shrink-0 whitespace-nowrap rounded-sharp border border-lost-bg px-4 text-xs font-semibold text-lost disabled:border-line disabled:text-faint">Delete selected ({selected})</button>
     </div>

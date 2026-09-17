@@ -84,7 +84,7 @@ export default async function AdminDashboardPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-8 sm:px-7 sm:pb-10">
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-7 sm:py-10">
       <h1 className="text-3xl font-semibold tracking-[-0.045em] text-ink sm:text-4xl">Dashboard Overview</h1>
 
       <section className={`mt-5 grid grid-cols-2 gap-2 ${canViewRevenue ? "lg:grid-cols-5" : "lg:grid-cols-4"}`} aria-label="Dashboard metrics">
