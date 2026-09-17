@@ -41,12 +41,11 @@ export function LandingSections({
   );
 }
 
-function SectionIntro({ id, kicker, title, children }: { id: string; kicker: string; title: string; children?: React.ReactNode }) {
+function SectionIntro({ id, kicker, title }: { id: string; kicker: string; title: string }) {
   return (
     <div className="max-w-2xl">
       <p className="landing-kicker">{kicker}</p>
       <h2 id={id} className="landing-h2">{title}</h2>
-      {children ? <p className="mt-3 text-[0.9375rem] leading-relaxed text-on-navy-2">{children}</p> : null}
     </div>
   );
 }
@@ -57,9 +56,7 @@ function FreeTipsSection({ board, timezone }: { board: FreeTipsBoard; timezone: 
   return (
     <section id="free-tips" className="landing-band scroll-mt-20" aria-labelledby="free-tips-title">
       <div className="landing-container">
-        <SectionIntro id="free-tips-title" kicker="Free tips · No account needed" title="Free Tips & Predictions">
-          Yesterday&apos;s results and today&apos;s card, with the booking code to copy underneath. Check every game on your bookmaker before you place anything.
-        </SectionIntro>
+        <SectionIntro id="free-tips-title" kicker="Free tips · No account needed" title="Free Tips & Predictions" />
         <TipsBoard
           days={board.days}
           bookingsByDate={board.bookingsByDate}
@@ -99,11 +96,11 @@ function HowItWorks() {
         <ol className="mt-8 grid gap-4 md:grid-cols-3">
           {STEPS.map((step, index) => (
             <li key={step.title} className="landing-step">
-              <span className="flex items-center gap-3">
-                <span className="landing-step-number" aria-hidden>{index + 1}</span>
-                <step.icon aria-hidden className="size-6 text-green-400" />
-              </span>
-              <h3 className="mt-4 text-lg">{step.title}</h3>
+              <div className="flex items-start gap-3">
+                <span className="landing-step-number shrink-0" aria-hidden>{index + 1}</span>
+                <h3 className="min-w-0 flex-1 pt-0.5 text-lg">{step.title}</h3>
+                <step.icon aria-hidden className="size-6 shrink-0 text-green-400" />
+              </div>
               <p className="mt-2 text-sm leading-relaxed text-on-navy-2">{step.body}</p>
             </li>
           ))}
@@ -121,9 +118,6 @@ function RecordSection({ won, lost, settled, winRate }: { won: number; lost: num
         <div>
           <p className="landing-kicker">An open record</p>
           <h2 id="record-title" className="landing-h2">Every prediction we publish stays published, won or lost</h2>
-          <p className="mt-3 text-[0.9375rem] leading-relaxed text-on-navy-2">
-            Win rate is wins divided by wins and losses, and it is always shown beside how many tips it covers. Voids and pushes stay in the record.
-          </p>
           <Link href="/results" className="landing-link mt-5">
             See the full record <ChevronRight aria-hidden className="size-4" />
           </Link>
@@ -168,9 +162,7 @@ function SportsSection() {
   return (
     <section className="landing-band landing-band-alt" aria-labelledby="sports-title">
       <div className="landing-container">
-        <SectionIntro id="sports-title" kicker="Sports" title="Football, basketball and tennis">
-          Real, competitive fixtures only. We don&apos;t publish predictions on virtual games or casino outcomes.
-        </SectionIntro>
+        <SectionIntro id="sports-title" kicker="Sports" title="Football, basketball and tennis" />
         <ul className="mt-8 grid gap-3 sm:grid-cols-3">
           {(["football", "basketball", "tennis"] as const).map((sport) => (
             <li key={sport}>
@@ -198,11 +190,8 @@ function CommunitySection() {
           <div className="min-w-0">
             <p className="landing-kicker text-white/80">Community</p>
             <h2 id="community-title" className="landing-h2">Get each day&apos;s tips where you already are</h2>
-            <p className="mt-3 max-w-xl text-[0.9375rem] leading-relaxed text-white/85">
-              Join our Telegram and WhatsApp channels for daily tips, results and match talk with other fans.
-            </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-3">
             <a href={communityLinks.telegram} target="_blank" rel="noreferrer" className="landing-channel">
               <Send aria-hidden className="size-5" /> Telegram
               <span className="sr-only"> (opens in a new tab)</span>

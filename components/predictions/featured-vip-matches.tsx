@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckoutButton } from "@/components/payments/checkout-button";
 import { SectionHead } from "@/components/ui/layout";
-import { formatSlipPrice, resolveVipSlip } from "@/lib/vip/slip-status";
+import { formatSlipPrice, resolveVipSlip, type VipBookingLike } from "@/lib/vip/slip-status";
 
 type VipPlan = {
   id: string;
@@ -10,22 +10,6 @@ type VipPlan = {
   currency: string;
   isSoldOut: boolean;
   deck: { id: string; slug: string } | null;
-};
-
-type VipBooking = {
-  id: string;
-  category: string;
-  priceMinor: number | null;
-  currency: string;
-  isSoldOut: boolean;
-  salesClosed: boolean;
-  predictions: Array<{
-    id: string;
-    result: string;
-    market: string | null;
-    selection: string | null;
-    fixture: { homeTeam: { name: string }; awayTeam: { name: string } };
-  }>;
 };
 
 /** A slip that was never published is not the same as one that sold out, so the
@@ -67,7 +51,7 @@ export function FeaturedVipMatches({
   loginNext = "/predictions#featured-vip-matches",
 }: {
   plans: VipPlan[];
-  bookings: Map<string, VipBooking>;
+  bookings: ReadonlyMap<string, VipBookingLike>;
   userSignedIn: boolean;
   purchasedBookingIds: string[];
   paymentsConfigured: boolean;

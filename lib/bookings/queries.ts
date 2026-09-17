@@ -3,6 +3,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { publicBookingTag, publicVipTag } from "@/lib/cache/tags";
 import { getDatabase } from "@/lib/db/client";
+import { toSportSlug } from "@/lib/domain/tips";
 import { getUtcDayRange } from "@/lib/football/dates";
 
 /** A free booking code, as the public boards show it. */
@@ -57,7 +58,9 @@ const getCachedCurrentVipBookingsByDate = unstable_cache(async function getCache
           market: true,
           selection: true,
           result: true,
-          fixture: { select: { homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } } },
+          fixture: {
+            select: { league: { select: { sport: true } }, homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } },
+          },
         },
         orderBy: { createdAt: "asc" },
       },
@@ -75,10 +78,11 @@ const getCachedCurrentVipBookingsByDate = unstable_cache(async function getCache
       result: prediction.result,
       market: prediction.result === "PENDING" ? null : prediction.market,
       selection: prediction.result === "PENDING" ? null : prediction.selection,
-      fixture: prediction.fixture,
+      sport: toSportSlug(prediction.fixture.league.sport),
+      fixture: { homeTeam: prediction.fixture.homeTeam, awayTeam: prediction.fixture.awayTeam },
     })),
   }));
-}, ["current-vip-bookings-v2"], { revalidate: 60, tags: [publicVipTag] });
+}, ["current-vip-bookings-v3"], { revalidate: 60, tags: [publicVipTag] });
 
 export async function getCurrentVipBookingsByDate(date: string, countryCode = "GH") {
   const bookings = await getCachedCurrentVipBookingsByDate(date, countryCode);

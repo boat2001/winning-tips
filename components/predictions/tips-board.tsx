@@ -4,8 +4,11 @@ import Link from "next/link";
 import { useId, useMemo, useState, type KeyboardEvent } from "react";
 import { ChevronRight, Search, Ticket } from "lucide-react";
 import { CopyCodeButton } from "@/components/predictions/copy-code-button";
+import { SportPicker } from "@/components/predictions/sport-picker";
+import { sportLabel } from "@/components/ui/sport-icon";
 import { platformLabel } from "@/lib/bookings/platform";
 import type { PublicBooking } from "@/lib/bookings/queries";
+import type { SportSlug } from "@/lib/domain/tips";
 import type { BoardDay } from "@/lib/predictions/board";
 import { cn } from "@/lib/utils/cn";
 import { formatKickoffTime } from "@/lib/utils/datetime";
@@ -68,18 +71,21 @@ export function TipsBoard({
   const id = useId();
   const [activeKey, setActiveKey] = useState<BoardDay["key"]>("today");
   const [query, setQuery] = useState("");
+  const [sport, setSport] = useState<SportSlug | null>(null);
   const day = days.find((item) => item.key === activeKey) ?? days[days.length - 1];
   const bookings = bookingsByDate[day.date] ?? [];
 
   const predictions = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) return day.predictions;
-    return day.predictions.filter((prediction) =>
-      [prediction.homeTeam, prediction.awayTeam, prediction.league, prediction.market, prediction.selection].some((value) =>
-        value?.toLowerCase().includes(normalized),
-      ),
+    return day.predictions.filter(
+      (prediction) =>
+        (!sport || prediction.sport === sport) &&
+        (!normalized ||
+          [prediction.homeTeam, prediction.awayTeam, prediction.league, prediction.market, prediction.selection].some((value) =>
+            value?.toLowerCase().includes(normalized),
+          )),
     );
-  }, [day.predictions, query]);
+  }, [day.predictions, query, sport]);
 
   // Arrow keys move between tabs, as the WAI-ARIA tabs pattern expects.
   function onTabKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
@@ -95,6 +101,8 @@ export function TipsBoard({
     ? { title: "Tips couldn't load", body: "We couldn't reach the predictions just now. Try again in a moment." }
     : query.trim()
       ? { title: "No tips match your search", body: "Try a team or competition name." }
+      : sport && day.predictions.length
+        ? { title: `No ${sportLabel(sport).toLowerCase()} tips on this day`, body: "Pick another sport, or All." }
       : day.key === "today"
         ? { title: "Today's free card is on the way", body: "Free tips go up before the first kick-off." }
         : { title: "No free tips on this day", body: "Nothing was published for yesterday." };
@@ -147,6 +155,7 @@ export function TipsBoard({
               className="h-11 w-full rounded-pill border border-card-line bg-card-2 pl-10 pr-4 text-base text-ink-900 placeholder:text-ink-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 sm:text-sm"
             />
           </label>
+          <SportPicker value={sport} onChange={setSport} className="mt-2.5" />
         </div>
 
         <div id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-tab-${day.key}`}>

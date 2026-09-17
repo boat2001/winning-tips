@@ -403,6 +403,11 @@ the results screen moved to `ResultsChart`.
 
 ## 2026-09-07 — Sport marks drawn as SVG, not cropped from the ball photographs
 
+> **Superseded 2026-09-17:** the owner asked for real ball icons. The marks are
+> now the MIT-licensed Fluent Emoji 3D soccer ball, basketball and tennis ball
+> (`public/assets/sports/{football,basketball,tennis}.webp`). `balls.webp` is
+> still used uncropped as landing decoration.
+
 **Guide reference:** §13.6 (do not substitute assets), §15 (never crop or
 distort supplied artwork without approval).
 

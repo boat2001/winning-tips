@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { getDatabase } from "@/lib/db/client";
 import { publicPerformanceTag, publicPredictionTag, publicVipTag } from "@/lib/cache/tags";
 import { getFixtureDateWindows, getUtcDayRange, toDateKey } from "@/lib/football/dates";
+import { toSportSlug, type SportSlug } from "@/lib/domain/tips";
 
 export interface PublicPrediction {
   id: string;
@@ -10,6 +11,7 @@ export interface PublicPrediction {
   fixtureStatus: string;
   homeScore: number | null;
   awayScore: number | null;
+  sport: SportSlug;
   league: string;
   leagueCountry: string;
   homeTeam: string;
@@ -33,7 +35,7 @@ const relationSelect = {
       status: true,
       homeScore: true,
       awayScore: true,
-      league: { select: { name: true, country: true } },
+      league: { select: { name: true, country: true, sport: true } },
       homeTeam: { select: { name: true } },
       awayTeam: { select: { name: true } },
     },
@@ -64,7 +66,7 @@ function toPublicPrediction(
       status: string;
       homeScore: number | null;
       awayScore: number | null;
-      league: { name: string; country: string };
+      league: { name: string; country: string; sport: string };
       homeTeam: { name: string };
       awayTeam: { name: string };
     };
@@ -79,6 +81,7 @@ function toPublicPrediction(
     fixtureStatus: prediction.fixture.status,
     homeScore: prediction.fixture.homeScore,
     awayScore: prediction.fixture.awayScore,
+    sport: toSportSlug(prediction.fixture.league.sport),
     league: prediction.fixture.league.name,
     leagueCountry: prediction.fixture.league.country,
     homeTeam: prediction.fixture.homeTeam.name,
@@ -150,7 +153,7 @@ async function getPredictionDayBoardUncached(reference: Date, premiumAccess: Pre
 
 const getCachedPredictionDayBoard = unstable_cache(
   async (referenceDate: string, premiumAccess: PremiumAccess) => getPredictionDayBoardUncached(new Date(`${referenceDate}T12:00:00.000Z`), premiumAccess),
-  ["prediction-day-board-v1"],
+  ["prediction-day-board-v2"],
   { revalidate: 60, tags: [publicPredictionTag] },
 );
 

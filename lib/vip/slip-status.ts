@@ -1,3 +1,5 @@
+import type { SportSlug } from "@/lib/domain/tips";
+
 /**
  * Where a tier's VIP slip stands today.
  *
@@ -36,6 +38,7 @@ export interface VipSlipLeg {
   /** Null until the leg settles: pending legs arrive redacted. */
   market: string | null;
   selection: string | null;
+  sport: SportSlug;
   fixture: { homeTeam: { name: string }; awayTeam: { name: string } };
 }
 
