@@ -59,6 +59,7 @@ export function TipsBoard({
   timezone,
   unavailable = false,
   viewAllHref,
+  initialSport = "football",
   className,
 }: {
   days: BoardDay[];
@@ -66,12 +67,13 @@ export function TipsBoard({
   timezone: string;
   unavailable?: boolean;
   viewAllHref?: string;
+  initialSport?: SportSlug;
   className?: string;
 }) {
   const id = useId();
   const [activeKey, setActiveKey] = useState<BoardDay["key"]>("today");
   const [query, setQuery] = useState("");
-  const [sport, setSport] = useState<SportSlug | null>(null);
+  const [sport, setSport] = useState<SportSlug>(initialSport);
   const day = days.find((item) => item.key === activeKey) ?? days[days.length - 1];
   const bookings = bookingsByDate[day.date] ?? [];
 
@@ -79,7 +81,7 @@ export function TipsBoard({
     const normalized = query.trim().toLowerCase();
     return day.predictions.filter(
       (prediction) =>
-        (!sport || prediction.sport === sport) &&
+        prediction.sport === sport &&
         (!normalized ||
           [prediction.homeTeam, prediction.awayTeam, prediction.league, prediction.market, prediction.selection].some((value) =>
             value?.toLowerCase().includes(normalized),
@@ -101,8 +103,8 @@ export function TipsBoard({
     ? { title: "Tips couldn't load", body: "We couldn't reach the predictions just now. Try again in a moment." }
     : query.trim()
       ? { title: "No tips match your search", body: "Try a team or competition name." }
-      : sport && day.predictions.length
-        ? { title: `No ${sportLabel(sport).toLowerCase()} tips on this day`, body: "Pick another sport, or All." }
+      : day.predictions.length
+        ? { title: `No ${sportLabel(sport).toLowerCase()} tips on this day`, body: "Pick another sport." }
       : day.key === "today"
         ? { title: "Today's free card is on the way", body: "Free tips go up before the first kick-off." }
         : { title: "No free tips on this day", body: "Nothing was published for yesterday." };
